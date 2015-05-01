@@ -13,32 +13,36 @@ var elements = (
             <MyInput/>
         </MyComponent>
     )
+
 var $root = $r(elements) // renders and returns a wrapped instance
 
-$r($root)    // calling it again won't rerender or rewrap
-$r($root[0]) 
+$r($root)    // | calling it again won't rerender or rewrap
+$r($root[0]) // |
 
 //-- simple selector syntax --
 $root.find('.fun-div') //class
 $root.find('div')      // tag name
-$root.find(MyInput)    // tag type
+$root.find(MyInput)    // component type
 
-$root.find(':dom')     // all dom nodes
+$root.find(':dom')        // all dom nodes
 $root.find(':composite')  // all non DOM components
 
-$root.find()     // everything!
+$root.find()  // everything! all descendents
 
-//-- like jquery you get an array like thing
-$root.find(MyInput).each( component => /*do something */)
+//-- like jquery you get an arraylike thing
+$root.find(MyInput).length // 2
 
-$root.find('.fun-div')[0] // or .get() to unwrap the collection
+$root.find(MyInput).each( (component, idx) => /*do something */)
 
-// some common conveinces
+// use the index or `get()` to unwrap the collection into a single component or real array
+$root.find('.fun-div')[0] 
+
+
 $root.find(MyInput).first()
 $root.find(MyInput).last()
 
 // you can still get the implicit asserts for finding single components
-$root.find('.fun-div').only() // asserts that .length === 0
+$root.find('.fun-div').only() // throws a TypeError .length === 0 
 $root.single('.fun-div')      // is the same thing
 
 
