@@ -83,7 +83,7 @@ ComponentCollection.prototype = {
       })
 
     else if ( selector[0] === '.' )
-      components = utils.scryRenderedDOMComponentsWithClass(this.context, selector)
+      components = utils.scryRenderedDOMComponentsWithClass(this.context, selector.substr(1))
 
     else
       components = utils.scryRenderedDOMComponentsWithTag(this.context, selector)
@@ -123,7 +123,7 @@ ComponentCollection.prototype = {
     if ( !(event in utils.Simulate)) 
       throw new TypeError( '"' + event + '" is not a valid DOM event')
 
-    this.each(function(component){
+    return this.each(function(component){
       utils.Simulate[event]($r.dom(component), data)
     })
   }
