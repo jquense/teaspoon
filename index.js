@@ -1,22 +1,22 @@
-var React = require('react/addons');
-var utils = React.addons.TestUtils
-
+var React = require('react');
+var ReactDOM = require('react-dom')
+var utils = require('react-addons-test-utils')
 
 var $r = module.exports = rtq
 
 rtq.react = React;
 
-function rtq(element) {
+function rtq(element, mount) {
   var context;
 
   if ( utils.isElement(element) ) {
-    element = context = utils.renderIntoDocument(element)
+    element = context = mount ? ReactDOM.render(element, mount) : utils.renderIntoDocument(element)
   }
   else if ( utils.isDOMComponent(element) || utils.isCompositeComponent(element))
     context = element
   else if ( element.__isRTQ )
     context = element.context
-  else 
+  else
     throw new TypeError('Wrong type: must either be ReactElement or a Component Instance')
 
   return new ComponentCollection(element, context)
@@ -35,7 +35,25 @@ function ComponentCollection(_components, context, selector){
 }
 
 rtq.dom = function(component){
- return React.findDOMNode(component)
+ return componet instanceof HTMLElement ? component : ReactDOM.findDOMNode(component)
+}
+
+/**
+ * Helper for rendering and updating props for plain class Components
+ * since `setProps` is deprecated.
+ * @param  {ReactElement} element     Root element to render
+ * @param  {HTMLElement?} mountPoint  Optional mount node, when empty it uses an unattached div like `renderIntoDocument()`
+ * @return {ComponentInstance}        The instance, with a new method `renderWithProps` which will return a new instance with updated props
+ */
+function render(element, mountPoint) {
+  let mount = mountPoint || document.createElement('div');
+  let instance = ReactDOM.render(element, mount);
+
+  if (!instance.renderWithProps) {
+    instance.renderWithProps = newProps => render(React.cloneElement(element, newProps), mount)
+  }
+
+  return instance;
 }
 
 ComponentCollection.prototype = {
@@ -50,7 +68,7 @@ ComponentCollection.prototype = {
 
   map: function(cb, thisArg) {
     var idx = -1, len = this.length, result = []
-    while( ++idx < len ) result.push(cb.call(thisArg, this[idx], idx, this)) 
+    while( ++idx < len ) result.push(cb.call(thisArg, this[idx], idx, this))
     return result
   },
 
@@ -73,12 +91,12 @@ ComponentCollection.prototype = {
       components = utils.findAllInRenderedTree(this.context, function(){ return true })
 
     else if( selector === ':dom' )
-      components = utils.findAllInRenderedTree(this.context, function(item){ 
-        return utils.isDOMComponent(item) 
+      components = utils.findAllInRenderedTree(this.context, function(item){
+        return utils.isDOMComponent(item)
       })
 
     else if( selector === ':composite' )
-      components = utils.findAllInRenderedTree(this.context, function(item){ 
+      components = utils.findAllInRenderedTree(this.context, function(item){
         return !utils.isDOMComponent(item)
       })
 
@@ -97,20 +115,20 @@ ComponentCollection.prototype = {
   },
 
   single: function(selector){
-    return selector 
-      ? this.find(selector).only() 
+    return selector
+      ? this.find(selector).only()
       : this.only()
   },
 
   first: function(selector){
-    return selector 
-      ? this.find(selector).first() 
+    return selector
+      ? this.find(selector).first()
       : new ComponentCollection(this[0], this.context, this.selector)
   },
 
   last: function(selector){
-    return selector 
-      ? this.find(selector).last() 
+    return selector
+      ? this.find(selector).last()
       : new ComponentCollection(this[this.length - 1], this.context, this.selector)
   },
 
@@ -120,7 +138,7 @@ ComponentCollection.prototype = {
     if (event.substr(0, 2) === 'on' )
       event = event.substr(2, 1).toLowerCase() + event.substr(3)
 
-    if ( !(event in utils.Simulate)) 
+    if ( !(event in utils.Simulate))
       throw new TypeError( '"' + event + '" is not a valid DOM event')
 
     return this.each(function(component){

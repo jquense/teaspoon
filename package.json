@@ -1,6 +1,6 @@
 {
   "name": "react-testutil-query",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "small wrapper around react test utils so I don't have to write long method names",
   "main": "index.js",
   "scripts": {
@@ -21,9 +21,12 @@
     "url": "https://github.com/jquense/react-testutil-query/issues"
   },
   "homepage": "https://github.com/jquense/react-testutil-query",
-
   "peerDependencies": {
-    "react": ">=0.13.0"
+    "react": ">=0.14.0-rc1",
+    "react-dom": ">=0.14.0-rc1"
+  },
+  "devDependencies": {},
+  "dependencies": {
+    "react-addons-test-utils": "^0.14.0-rc1"
   }
-
 }
