@@ -1,7 +1,10 @@
 React TestUtils utils
 ========
 
-A simple jquery like api wrapper for the React TestUtils to make them a bit friendlier to use. The source is really tiny so check it out
+A simple jquery like api wrapper for the React TestUtils to make them a bit friendlier to use.
+
+Updates for react 0.14, works with Stateless Components and you can scry and filter on DOM components
+as well.
 
 ```js
 var $r = require('react-testutil-query')
@@ -35,18 +38,18 @@ $root.find(MyInput).length // 2
 $root.find(MyInput).each( (component, idx) => /*do something */)
 
 // use the index or `get()` to unwrap the collection into a single component or real array
-$root.find('.fun-div')[0] 
+$root.find('.fun-div')[0]
 
 
 $root.find(MyInput).first()
 $root.find(MyInput).last()
 
 // you can still get the implicit asserts for finding single components
-$root.find('.fun-div').only() // throws a TypeError .length === 0 
+$root.find('.fun-div').only() // throws a TypeError .length === 0
 $root.single('.fun-div')      // is the same thing
 
 
-// -- getting DOM nodes 
+// -- getting DOM nodes
 $root.single('.fun-div').dom() // returns the single DOM node
 $root.find(MyInput).dom() //returns an array of DOM nodes
 
@@ -54,4 +57,3 @@ $root.find(MyInput).dom() //returns an array of DOM nodes
 $root.find(MyInput).trigger('change', { target: { value: 6 }}) // triggers onChange for all of them
 
 ```
-
