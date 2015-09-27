@@ -223,7 +223,7 @@ ComponentCollection.prototype = {
     if (!(event in utils.Simulate))
       throw new TypeError( '"' + event + '" is not a supported DOM event')
 
-    return this.each(component => 
+    return this.each(component =>
       utils.Simulate[event]($r.dom(component), data))
   }
 }
