@@ -1,6 +1,6 @@
 import React from 'react';
 import { unmountComponentAtNode, render } from 'react-dom';
-import $ from './src/index';
+import $ from '../src/index';
 
 chai.use(require('sinon-chai'))
 

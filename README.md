@@ -6,6 +6,8 @@ A simple jquery like api wrapper for the React TestUtils to make them a bit frie
 Updates for react 0.14, works with Stateless Components and you can scry and filter on DOM components
 as well.
 
+### Traditional DOM rendering
+
 ```js
 var $r = require('react-testutil-query')
 
@@ -55,5 +57,50 @@ $root.find(MyInput).dom() //returns an array of DOM nodes
 
 // -- events
 $root.find(MyInput).trigger('change', { target: { value: 6 }}) // triggers onChange for all of them
+```
+
+### Shallow rendering
+
+We can use an even more powerful selector syntax will shallow rendering
+
+```js
+var $ = require('react-testutil-query/shallow');
+
+let label = 'list item';
+
+let BasicList = props => <ul>{props.children}</ul>
+
+let DivList = ()=> (
+  <div>
+    <BasicList className='my-list'>
+      <li className='foo'>hi 1</li>
+      <li className='foo'>hi 2</li>
+      <li aria-label={label}>hi 3</li>
+    </BasicList>
+  </div>
+)
+
+
+let $root = $(<DivList);
+
+$root.find('.my-list > li.foo').length // 2
+
+$root.find('.my-list').children('.foo').length // 2
+
+$root.find('div li[aria-label="list item"]').length // 1
+
+// you can even use es6 template strings to write
+// selectors for your custom components
+$root.find($.s`${BasicList} > li.foo`).length // 2
+
+//or for prop values
+$root.find($.s`li[aria-label=${label}]`).length // 1
+
+$root.find(BasicList)
+  .children()
+  .filter(element => element.props.className === 'foo')
+  .length // 2
+
+$root.find(BasicList).is('.my-list').length // true
 
 ```
