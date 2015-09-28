@@ -1,6 +1,6 @@
 {
   "name": "react-testutil-query",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "description": "small wrapper around react test utils so I don't have to write long method names",
   "main": "index.js",
   "repository": {
@@ -23,7 +23,7 @@
     "react-dom": ">=0.14.0-rc1"
   },
   "dependencies": {
-    "bill": "^1.0.4",
+    "bill": "^1.1.0",
     "dom-helpers": "^2.4.0",
     "react-addons-test-utils": "^0.14.0-rc1"
   }

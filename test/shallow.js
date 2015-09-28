@@ -94,6 +94,11 @@ describe('Shallow rendering', ()=> {
       instance.filter().should.equal(instance)
     })
 
+    it.only('text content', ()=>{
+      let instance = $(<List/>)
+      instance.text().should.equal('hi 1hi 2hi 3')
+    })
+
     it('should: is()', ()=>{
       $(<List/>).find('.foo')
         .is('li').should.equal(true)
