@@ -1,4 +1,4 @@
-React TestUtils utils
+React TestUtils Query
 ========
 
 A simple jquery like api wrapper for the React TestUtils to make them a bit friendlier to use.
