@@ -1,6 +1,6 @@
 {
   "name": "react-testutil-query",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "small wrapper around react test utils so I don't have to write long method names",
   "main": "lib/index.js",
   "scripts": {
