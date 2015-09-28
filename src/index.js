@@ -1,37 +1,38 @@
-
-var React = require('react');
-var ReactDOM = require('react-dom')
-var ReactInstanceMap = require('react/lib/ReactInstanceMap')
-var utils = require('react-addons-test-utils')
-var findAll = require('./utils')
-var hasClass = require('dom-helpers/class/hasClass')
+import React from 'react';
+import ReactDOM from 'react-dom';
+import ReactInstanceMap from 'react/lib/ReactInstanceMap';
+import utils from 'react-addons-test-utils';
+import { match as _match, selector as sel } from './instance-selector';
+import hasClass from 'dom-helpers/class/hasClass';
 
 var $r = module.exports = rtq
 
-let isRtq = item => item && item.__isRTQ
+let isRtq = item => item && item._isRTQ
+
 rtq.react = React;
+rtq.s = rtq.selector = sel;
 
 function rtq(element, mount, renderIntoDocument = (mount === true)) {
   var context;
 
-  if (!mount || mount === true) {
+  if (!mount || mount === true)
     mount = document.createElement('div')
-  }
 
-  if (utils.isElement(element)) {
-    context = mount
-    element = render(element, mount, renderIntoDocument)
-  }
-  else if (utils.isDOMComponent(element) || utils.isCompositeComponent(element))
+  if (utils.isElement(element))
+    context = element = render(element, mount, renderIntoDocument)
+  else if (utils.isDOMComponent(element) || utils.isCompositeComponent(element)){
     context = element
+    mount = rtq.dom(element).parentNode
+  }
   else if (isRtq(element)) {
+    mount = element._mountPoint
     context = element.context
     element = element.get();
   }
   else
     throw new TypeError('Wrong type: must either be ReactElement or a Component Instance')
 
-  return new ComponentCollection(element, context)
+  return new ComponentCollection(element, context, mount)
 }
 
 function render(element, mountPoint, renderIntoDocument = false) {
@@ -57,162 +58,165 @@ function render(element, mountPoint, renderIntoDocument = false) {
   return instance;
 }
 
-function ComponentCollection(_components, context, selector){
-  var components = _components == null ? [] : [].concat(_components)
-    , idx = -1, len = components.length
+function match(selector, tree, includeSelf){
+  if (typeof selector === 'function')
+    selector = sel`${selector}`
 
-  this._privateInstances = Object.create(null)
-
-  while( ++idx < len ) {
-    var component = components[idx]
-
-    // if this is a private instance, get the public one
-    if (component.getPublicInstance) {
-      this._privateInstances[idx] = component
-      component = component.getPublicInstance();
-
-      //stateless
-      if (component === null)
-        component = ReactDOM.findDOMNode(this._privateInstances[idx]._instance)
-    }
-    // if this a root Stateless component
-    else if (component && component.__isRTQstatelessWrapper){
-      let wrapperInstance = ReactInstanceMap.get(component);
-      this._privateInstances[idx] = wrapperInstance._renderedComponent;
-      component = ReactDOM.findDOMNode(component)
-    }
-    else {
-      this._privateInstances[idx] = ReactInstanceMap.get(component) || component._reactInternalComponent
-    }
-
-    this[idx] = component
-  }
-
-  this.length = len
-  this.context = context
-  this.selector = selector
-  this.__isRTQ = true
+  return _match(selector, tree, includeSelf)
 }
-
 
 rtq.dom = function(component){
  return component instanceof HTMLElement ? component : ReactDOM.findDOMNode(component)
 }
 
-ComponentCollection.prototype = {
 
-  constructor: ComponentCollection,
+class ComponentCollection {
+
+  constructor(_components, context, mountPoint, selector){
+    var components = _components == null ? [] : [].concat(_components)
+      , idx = -1, len = components.length
+
+    this._privateInstances = Object.create(null)
+
+    while (++idx < len) {
+      var component = components[idx]
+
+      if (component.getPublicInstance) {
+        this._privateInstances[idx] = component
+        component = component.getPublicInstance();
+
+        //stateless
+        if (component === null)
+          component = ReactDOM.findDOMNode(this._privateInstances[idx]._instance)
+      }
+      // if this a root Stateless component
+      else if (component && component.__isRTQstatelessWrapper){
+        let wrapperInstance = ReactInstanceMap.get(component);
+        this._privateInstances[idx] = wrapperInstance._renderedComponent;
+        component = ReactDOM.findDOMNode(component)
+      }
+      else {
+        this._privateInstances[idx] = ReactInstanceMap.get(component) || component._reactInternalComponent
+      }
+
+      this[idx] = component
+    }
+
+    this.length = len
+    this.context = context
+    this.selector = selector
+    this._mountPoint = mountPoint
+    this._isRTQ = true
+  }
+
+  _root(){
+    return this.context._reactInternalComponent || this.context
+  }
 
   unmount(){
     let inBody = !!this.context.parentNode;
+    ReactDOM.unmountComponentAtNode(this._mountPoint)
 
-    ReactDOM.unmountComponentAtNode(this.context)
     if (inBody)
-      document.body.removeChild(this.context)
+      document.body.removeChild(this._mountPoint)
+
     this.context = null
-  },
+  }
 
   setProps(newProps){
     return this.mapInPlace(element => element.renderWithProps(newProps))
-  },
+  }
 
   each(cb, thisArg) {
     var idx = -1, len = this.length;
     while( ++idx < len ) cb.call(thisArg, this[idx], idx, this)
     return this
-  },
+  }
 
   mapInPlace(cb, thisArg) {
     return this.each((el, idx, list)=> this[idx] = cb(el, idx, list))
-  },
+  }
 
   map(cb, thisArg) {
     var idx = -1, len = this.length, result = []
-    while( ++idx < len ) result.push(cb.call(thisArg, this[idx], idx, this))
+    while (++idx < len) result.push(cb.call(thisArg, this[idx], idx, this))
     return result
-  },
+  }
+
+  _reduce(cb, initial){
+    return new ComponentCollection(
+        this._getInstances().reduce(cb, initial)
+      , this.context
+      , this._mountPount
+      , this.selector
+    )
+  }
+
+  reduce(cb, initial){
+    return new ComponentCollection(
+        [].reduce.call(this, cb, initial)
+      , this.context
+      , this._mountPount
+      , this.selector
+    )
+  }
 
   _getInstances(){
-    return this.map((component, idx) => {
+    return this.map((_, idx) => {
       return this._privateInstances[idx]
     })
-  },
+  }
 
   get(){
     return unwrap(this.map(component => component))
-  },
+  }
 
   dom() {
     return unwrap(this.map(rtq.dom))
-  },
+  }
 
   find(selector){
-    let result = []
+    return this._reduce((result, instance) => {
+      return result.concat(match(selector, instance, false))
+    }, [])
+  }
 
-    this.each((component, idx) => {
-      component = component !== null
-        ? this._privateInstances[idx] || component
-        : component
+  filter(selector) {
+    if (!selector) return this
 
-      result = result.concat(_find(component, selector))
-    })
+    let matches = match(selector, this._root());
 
-    return new ComponentCollection(result, this.context, selector)
-  },
+    return this._reduce((result, el) => {
+      return matches.indexOf(el) !== -1 ? result.concat(el) : result
+    }, [])
+  }
 
   only(){
     if (this.length !== 1) throw Error('`' + this.selector +'` found: ' + this.length + ' not 1 ')
     return this.first()
-  },
+  }
 
   single(selector) {
     return selector
       ? this.find(selector).only()
       : this.only()
-  },
+  }
 
   first(selector){
     return selector
       ? this.find(selector).first()
-      : new ComponentCollection(this[0], this.context, this.selector)
-  },
+      : new ComponentCollection(this[0], this.context, this._mountPount, this.selector)
+  }
 
   last(selector){
     return selector
       ? this.find(selector).last()
-      : new ComponentCollection(this[this.length - 1], this.context, this.selector)
-  },
+      : new ComponentCollection(this[this.length - 1], this.context, this._mountPount, this.selector)
+  }
 
-  is(selector){
-    let instances = this._getInstances();
-    let getPublicInst = inst => inst.getPublicInstance ? inst.getPublicInstance() : inst;
-
-    if( typeof selector === 'function') {
-      return instances.every(inst => {
-        let publicInst = getPublicInst(inst);
-        return findAll.isCompositeComponent(publicInst)
-            && inst._currentElement.type === selector
-      })
-    }
-
-    else if( selector === ':dom' )
-      return instances.every(inst => {
-        return utils.isDOMComponent(getPublicInst(inst))
-      })
-
-    else if( selector === ':composite' )
-      return instances.every(inst => {
-        return findAll.isCompositeComponent(getPublicInst(inst))
-      })
-    else if ( selector[0] === '.' )
-      return instances.every(inst => {
-        return hasClass(rtq.dom(getPublicInst(inst)), selector.substr(1))
-      })
-    else
-      return instances.every(inst => {
-        return rtq.dom(getPublicInst(inst)).tagName.toUpperCase() === selector.toUpperCase()
-      })
-  },
+  is(selector) {
+    return this.filter(selector).length === this.length
+  }
 
   trigger(event, data){
     data = data || {}
@@ -228,34 +232,6 @@ ComponentCollection.prototype = {
   }
 }
 
-function _find(context, selector){
-  var components;
-
-  if( typeof selector === 'function') {
-    components = findAll.componentsByType(context, selector)
-    selector = selector.name || '<<anonymous component>>'
-  }
-  else if ( !selector )
-    components = findAll.findAllInRenderedTree(context, function(){ return true })
-
-  else if( selector === ':dom' )
-    components = findAll.findAllInRenderedTree(context, function(item){
-      return utils.isDOMComponent(item)
-    })
-
-  else if( selector === ':composite' )
-    components = findAll.findAllInRenderedTree(context, function(item){
-      return !utils.isDOMComponent(item)
-    })
-
-  else if ( selector[0] === '.' )
-    components = findAll.componentsByClassName(context, selector.substr(1))
-
-  else
-    components = findAll.componentsByTagName(context, selector)
-
-  return components || []
-}
 
 function unwrap(arr){
   return arr && arr.length === 1 ? arr[0] : arr

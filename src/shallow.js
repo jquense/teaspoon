@@ -43,7 +43,6 @@ function rtq(element) {
   else if (isRtq(element)) {
     context = element.root
     element = element.get();
-    //rerender = element._rerender
   }
 
   return new ShallowCollection(element, context, rerender)
@@ -110,14 +109,23 @@ class ShallowCollection {
     if (!selector)
       return this
 
-    if (typeof selector === 'function')
-      return new ShallowCollection([].filter.call(this, selector), this.root)
-
     let matches = match(selector, this.root);
 
     return new ShallowCollection([].filter.call(this, el => {
       return matches.indexOf(el) !== -1
     }), this.root)
+  }
+
+  first(selector){
+    return selector
+      ? this.find(selector).first()
+      : new ShallowCollection(this[0], this.root)
+  }
+
+  last(selector){
+    return selector
+      ? this.find(selector).last()
+      : new ComponentCollection(this[this.length - 1], this.root)
   }
 
   is(selector) {

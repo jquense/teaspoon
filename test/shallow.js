@@ -87,8 +87,6 @@ describe('Shallow rendering', ()=> {
 
       items.length.should.equal(3)
       items.filter('.foo').length.should.equal(2)
-
-      items.filter((el, idx) => idx === 0).length.should.equal(1)
     })
 
     it('an empty filter should be a noop', ()=>{

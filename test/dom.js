@@ -1,6 +1,7 @@
 import React from 'react';
 import { unmountComponentAtNode, render } from 'react-dom';
 import $ from '../src/index';
+import { match, selector as sel } from '../src/instance-selector';
 
 chai.use(require('sinon-chai'))
 
@@ -37,6 +38,24 @@ describe('DOM rendering', ()=> {
     }
   }
 
+  describe('css selector parsing', ()=>{
+
+    it('should match nested', ()=>{
+      let inst = $(<Component/>).get();
+
+      match('.list-wrapper', inst).length.should.equal(1)
+
+      match(sel`div.list-wrapper > ${List}`, inst).length.should.equal(1)
+
+      match(sel`${Stateless}`, inst).length.should.equal(1)
+
+      match(sel`.list-wrapper:has(${List})`, inst).length.should.equal(1)
+
+      match(sel`span:has(${List})`, inst).length.should.equal(0)
+    })
+
+  })
+
   it('should wrap existing mounted component', ()=> {
     let instance = render(<div className='test'/>, document.createElement('div'))
 
@@ -59,7 +78,7 @@ describe('DOM rendering', ()=> {
     let instance = $(<div className='test'/>)
 
     instance.context.tagName.should.equal('DIV')
-    expect(instance.context.parentNode).to.not.exist
+    expect(instance._mountPoint.parentNode).to.not.exist
   })
 
   it('should render element at mountPoint', ()=> {
@@ -67,7 +86,7 @@ describe('DOM rendering', ()=> {
     let instance = $(<div className='test'/>, mount)
 
     mount.children[0].classList.contains('test').should.equal(true)
-    instance.context.should.equal(mount)
+    instance._mountPoint.should.equal(mount)
   })
 
   it('should render into document', ()=> {
@@ -75,7 +94,7 @@ describe('DOM rendering', ()=> {
 
     document.querySelectorAll('.test').length.should.equal(1)
 
-    unmountComponentAtNode(instance.context)
+    unmountComponentAtNode(instance._mountPoint)
   })
 
   it('should render mount into document', ()=> {
@@ -83,9 +102,9 @@ describe('DOM rendering', ()=> {
     let instance = $(<div className='test'/>, mount, true)
 
     document.querySelectorAll('.test').length.should.equal(1)
-    instance.context.should.equal(mount)
+    instance._mountPoint.should.equal(mount)
 
-    unmountComponentAtNode(instance.context)
+    unmountComponentAtNode(instance._mountPoint)
   })
 
   it('should work with Stateless components as root', ()=>{
@@ -151,7 +170,7 @@ describe('DOM rendering', ()=> {
         let instance = $(<Component className='test'/>)
 
         let result = instance.find(':composite')
-        result.length.should.equal(3);
+        result.length.should.equal(2);
       })
 
       it('should find by :dom', ()=>{
@@ -257,6 +276,21 @@ describe('DOM rendering', ()=> {
 
         instance.find('li').first().is('.item').should.equal(true);
       })
+    })
+
+    it('should: filter()', ()=>{
+      let items = $(<Component/>).find('li')
+
+      items.length.should.equal(3)
+
+      items.filter('.item').length.should.equal(1)
+
+      $(<Component/>).find('div > *').filter(List).length.should.equal(1)
+    })
+
+    it('an empty filter should be a noop', ()=>{
+      let instance = $(<Component/>)
+      instance.filter().should.equal(instance)
     })
 
     it('should find single', ()=> {
