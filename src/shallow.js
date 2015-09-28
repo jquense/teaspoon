@@ -116,6 +116,11 @@ class ShallowCollection {
     }), this.root)
   }
 
+
+  is(selector) {
+    return this.filter(selector).length === this.length
+  }
+
   first(selector){
     return selector
       ? this.find(selector).first()
@@ -128,7 +133,21 @@ class ShallowCollection {
       : new ComponentCollection(this[this.length - 1], this.root)
   }
 
-  is(selector) {
-    return this.filter(selector).length === this.length
+  text(){
+    let str = '';
+
+    this.each(element => traverse(element,
+      el => typeof el === 'string' && (str += el))
+    )
+    return str
   }
+}
+
+function traverse(element, cb){
+  cb(element)
+
+  if (element && element.props)
+    React.Children.forEach(element.props.children, child => {
+      traverse(child, cb)
+    })
 }

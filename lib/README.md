@@ -3,8 +3,30 @@ React TestUtils utils
 
 A simple jquery like api wrapper for the React TestUtils to make them a bit friendlier to use.
 
-Updates for react 0.14, works with Stateless Components and you can scry and filter on DOM components
+Updated for react 0.14; works seamlessly with Stateless Components and you can find and filter on DOM components
 as well.
+
+### using selectors
+
+The selector syntax is subset of normal css selectors. You can query by tag: `'div > li'` or
+by `className` with `'.my-class'`. Attribute selectors work on props: `'[show=true]'` or `'[name="my-input"]'`.
+You can even use the `has()` pseudo selector for selecting parents.
+
+Unlike normal css selectors though, React Elements often have prop values, and element types that are not serializable
+to a nice string. What if you needed to select a `MyList` component by its "tag" or wanted to get all elements with
+a `date` prop equal to today?
+
+To write selectors for these values we use an es6 tagged template string! Both the DOM and shallow rendering
+imports expose a `$.selector` (also aliased as `$.s`) for writing complex selectors like so:
+
+```
+//select all `<MyList/>`s that are children of divs
+$.s`div > ${List}`
+
+//select components with `start` props equal to `min`
+let min = 10
+$.s`[start=${10}]`
+```
 
 ### Traditional DOM rendering
 
@@ -12,11 +34,11 @@ as well.
 var $r = require('react-testutil-query')
 
 var elements = (
-        <MyComponent>
-            <MyInput/>
-            <div className='fun-div'>
-            <MyInput/>
-        </MyComponent>
+      <MyComponent>
+          <MyInput/>
+          <div className='fun-div'>
+          <MyInput/>
+      </MyComponent>
     )
 
 var $root = $r(elements) // renders and returns a wrapped instance
@@ -27,7 +49,12 @@ $r($root[0]) // |
 //-- simple selector syntax --
 $root.find('.fun-div') //class
 $root.find('div')      // tag name
+
 $root.find(MyInput)    // component type
+
+// complex selectors
+$root.find('div.foo > span:has(div.bar)')  
+$root.find($.s`${MyList} > li.foo`)
 
 $root.find(':dom')        // all dom nodes
 $root.find(':composite')  // all non DOM components
@@ -61,7 +88,7 @@ $root.find(MyInput).trigger('change', { target: { value: 6 }}) // triggers onCha
 
 ### Shallow rendering
 
-We can use an even more powerful selector syntax will shallow rendering
+To query shallow rendered Components use the `'react-testutil-query/shallow'` import
 
 ```js
 var $ = require('react-testutil-query/shallow');
@@ -89,7 +116,6 @@ $root.find('.my-list').children('.foo').length // 2
 
 $root.find('div li[aria-label="list item"]').length // 1
 
-// you can even use es6 template strings to write
 // selectors for your custom components
 $root.find($.s`${BasicList} > li.foo`).length // 2
 
