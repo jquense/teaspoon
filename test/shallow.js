@@ -1,10 +1,8 @@
 import React, { cloneElement } from 'react';
-import $ from '../src/shallow';
-import { selector as sel } from 'bill';
+import $ from '../src/element';
 
-chai.use(require('sinon-chai'))
 
-describe('Shallow rendering', ()=> {
+describe.only('Shallow rendering', ()=> {
   let Stateless = props => <div onClick={props.onClick}>{props.children}</div>
   let List = class extends React.Component {
     render(){
@@ -23,10 +21,10 @@ describe('Shallow rendering', ()=> {
     }
   }
 
-  it('create rtq object', ()=>{
+  it('create element collection', ()=>{
     let instance = $(<div/>)
 
-    instance.root.type.should.equal('div')
+    instance.context.type.should.equal('div')
     instance.length.should.equal(1)
   })
 
@@ -34,15 +32,24 @@ describe('Shallow rendering', ()=> {
     let el = <div/>
       , instance = $(el)
 
-    instance.root.should.equal(el)
+    instance.context.should.equal(el)
   })
 
   it('should render Composite Components', ()=>{
     let el = <div/>
       , Element = ()=> el
-      , instance = $(<Element/>)
+      , instance = $(<Element/>).shallowRender()
 
-    instance.root.should.equal(el)
+    instance.context.should.equal(el)
+  })
+
+  it.only('should query Composite Components', ()=>{
+    $(<Element></Element>)
+      .is(Element).should.equal(true)
+
+    $(<Element><div><span/></div></Element>)
+      .find('div > span')
+      .length.should.equal(1)
   })
 
   it('should filter out invalid Elements', ()=>{
@@ -73,40 +80,41 @@ describe('Shallow rendering', ()=> {
     )
 
     it('should: find()', ()=>{
-      $(<List/>).find('li').length.should.equal(3)
+      $(<List/>).shallowRender().find('li').length.should.equal(3)
     })
 
     it('should: children()', ()=> {
-      $(<List/>).find(FancyList).children().length.should.equal(3)
+      $(<List/>).shallowRender().find(FancyList).children().length.should.equal(3)
 
-      $(<List/>).find(FancyList).children('.foo').length.should.equal(2)
+      $(<List/>).shallowRender().find(FancyList).children('.foo').length.should.equal(2)
     })
 
     it('should: filter()', ()=>{
-      let items = $(<List/>).find('li')
+      let items = $(<List/>).shallowRender().find('li')
 
       items.length.should.equal(3)
       items.filter('.foo').length.should.equal(2)
     })
 
     it('an empty filter should be a noop', ()=>{
-      let instance = $(<List/>)
+      let instance = $(<List/>).shallowRender()
       instance.filter().should.equal(instance)
     })
 
     it.only('text content', ()=>{
-      let instance = $(<List/>)
-      instance.text().should.equal('hi 1hi 2hi 3')
+      $(<List/>).shallowRender().text().should.equal('hi 1hi 2hi 3')
+
+      $(<div>hi <span>{'john'}</span></div>).text().should.equal('hi john')
     })
 
     it('should: is()', ()=>{
-      $(<List/>).find('.foo')
+      $(<List/>).shallowRender().find('.foo')
         .is('li').should.equal(true)
 
-      $(<List/>).find('.foo')
-        .is(sel`${FancyList} > li`).should.equal(true)
+      $(<List/>).shallowRender().find('.foo')
+        .is($.s`${FancyList} > li`).should.equal(true)
 
-      $(<List/>).find(FancyList)
+      $(<List/>).shallowRender().find(FancyList)
         .is('div').should.equal(false)
     })
   })

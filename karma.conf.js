@@ -9,7 +9,7 @@ module.exports = function (config) {
     reporters: ['mocha'],
 
     files: [
-      './test/*.js'
+      'webpack.tests.js'
     ],
 
     port: 9876,
@@ -22,7 +22,7 @@ module.exports = function (config) {
     browsers: ['Chrome'],
 
     preprocessors: {
-      'test/*.js': ['webpack']
+      'webpack.tests.js': ['webpack']
     },
 
     webpack: {
@@ -32,6 +32,7 @@ module.exports = function (config) {
     },
 
     webpackServer: {
+      stats: { progress: true, modules: false },
       noInfo: true
     }
 

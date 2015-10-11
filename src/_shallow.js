@@ -15,40 +15,39 @@ function match(selector, tree, includeSelf){
   return _match(selector, tree, includeSelf)
 }
 
-function render(element){
-  let root = element;
-
-  if (!(typeof root.type === 'string' && root.type.toLowerCase() === root.type)){
-    let renderer = TestUtils.createRenderer()
-    renderer.render(element)
-    root = renderer.getRenderOutput();
-  }
-
-  return {
-    root,
-    setProps(props){
-      return render(cloneElement(element, props))
-    }
-  }
-}
 
 function rtq(element) {
   var context, rerender;
 
   if (TestUtils.isElement(element)) {
-    let { root, setProps } = render(element)
-    element = context = root
-    rerender = setProps
+    element = context = element
   }
   else if (isRtq(element)) {
     context = element.root
     element = element.get();
   }
 
-  return new ShallowCollection(element, context, rerender)
+  return new ShallowCollection(element, context)
+}
+
+rtq.render = function render(element, props) {
+  let isDomElement = element
+        && typeof element.type === 'string'
+        && element.type.toLowerCase() === element.type;
+
+  if (props)
+    element = cloneElement(element, props)
+
+  if (isDomElement)
+    return rtq(element)
+
+  let renderer = TestUtils.createRenderer()
+  renderer.render(element)
+  return rtq(renderer.getRenderOutput());
 }
 
 class ShallowCollection {
+
   constructor(elements, root, rerender){
     elements = [].concat(elements).filter(el => isValidElement(el))
 
@@ -57,7 +56,6 @@ class ShallowCollection {
     while( ++idx < elements.length)
       this[idx] = elements[idx]
 
-    this._rerender = rerender
     this.length = elements.length
     this.root = root
   }
@@ -95,7 +93,7 @@ class ShallowCollection {
 
   find(selector) {
     return this.reduce((result, element) => {
-      return result.concat(match(selector, element))
+      return result.concat(match(selector, element, false))
     }, [])
   }
 
@@ -109,7 +107,7 @@ class ShallowCollection {
     if (!selector)
       return this
 
-    let matches = match(selector, this.root);
+    let matches = match(selector, this.root, true);
 
     return new ShallowCollection([].filter.call(this, el => {
       return matches.indexOf(el) !== -1
@@ -118,6 +116,7 @@ class ShallowCollection {
 
 
   is(selector) {
+
     return this.filter(selector).length === this.length
   }
 
