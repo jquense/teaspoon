@@ -1,10 +1,7 @@
 import React from 'react';
 import { unmountComponentAtNode, render } from 'react-dom';
-import $ from '../src/index';
-import { match, selector as sel } from '../src/instance-selector';
-
-chai.use(require('sinon-chai'))
-
+import $ from '../src/element';
+import * as utils from '../src/utils';
 
 describe('DOM rendering', ()=> {
   let Stateless = props => <div onClick={props.onClick}>{props.children}</div>
@@ -12,6 +9,7 @@ describe('DOM rendering', ()=> {
     render(){
       return (
         <div onClick={this.props.onClick}>
+          Hello there
           <Stateless onClick={this.props.onClick}>
             <span className='stateless-inner' onClick={this.props.onClick}/>
           </Stateless>
@@ -38,34 +36,18 @@ describe('DOM rendering', ()=> {
     }
   }
 
-  describe('css selector parsing', ()=>{
-
-    it('should match nested', ()=>{
-      let inst = $(<Component/>).get();
-
-      match('.list-wrapper', inst).length.should.equal(1)
-
-      match(sel`div.list-wrapper > ${List}`, inst).length.should.equal(1)
-
-      match(sel`${Stateless}`, inst).length.should.equal(1)
-
-      match(sel`.list-wrapper:has(${List})`, inst).length.should.equal(1)
-
-      match(sel`span:has(${List})`, inst).length.should.equal(0)
-    })
-
-  })
-
   it('should wrap existing mounted component', ()=> {
-    let instance = render(<div className='test'/>, document.createElement('div'))
+    let mount = document.createElement('div')
+      , instance = render(<div className='test'/>, mount)
 
     let $inst = $(instance);
 
     expect($inst[0]).to.equal(instance);
-    expect($inst.context).to.equal(instance)
+    //expect($inst.context).to.equal(utils.getInternalInstance(instance))
+    expect($inst._mountPoint).to.equal(mount)
   })
 
-  it('should recreate rtq object', ()=> {
+  it('should recreate $ object', ()=> {
     let instance = $(<div className='test'/>)
     let instanceB = $(instance);
 
@@ -74,60 +56,23 @@ describe('DOM rendering', ()=> {
     expect(instance[0]).to.equal(instanceB[0])
   })
 
-  it('should render element', ()=> {
-    let instance = $(<div className='test'/>)
-
-    instance.context.tagName.should.equal('DIV')
-    expect(instance._mountPoint.parentNode).to.not.exist
-  })
-
-  it('should render element at mountPoint', ()=> {
-    let mount = document.createElement('div')
-    let instance = $(<div className='test'/>, mount)
-
-    mount.children[0].classList.contains('test').should.equal(true)
-    instance._mountPoint.should.equal(mount)
-  })
-
-  it('should render into document', ()=> {
-    let instance = $(<div className='test'/>, true)
-
-    document.querySelectorAll('.test').length.should.equal(1)
-
-    unmountComponentAtNode(instance._mountPoint)
-  })
-
-  it('should render mount into document', ()=> {
-    let mount = document.createElement('div')
-    let instance = $(<div className='test'/>, mount, true)
-
-    document.querySelectorAll('.test').length.should.equal(1)
-    instance._mountPoint.should.equal(mount)
-
-    unmountComponentAtNode(instance._mountPoint)
-  })
-
-  it('should work with Stateless components as root', ()=>{
-    let instance = $(<Stateless name='hi'/>)
-
-    instance.length.should.equal(1)
-  })
-
   it('should unmount', ()=> {
     let mount = document.createElement('div')
-    let instance = $(<div className='test'/>, mount, true)
+    let instance = $(<div className='test'/>).render(true, mount)
 
     document.querySelectorAll('.test').length.should.equal(1)
 
-    instance.unmount()
+    let next = instance.unmount()
 
     document.querySelectorAll('.test').length.should.equal(0)
     expect(instance.context).to.not.exist
     expect(mount.parentNode).to.not.exist
+
+    expect(next[0].type).to.equal('div')
   })
 
   it('should return DOM node from Component', ()=> {
-    let instance = $(<div className='test'/>)
+    let instance = $(<div className='test'/>).render()
 
     instance.dom().should.be.an.instanceof(HTMLElement)
   })
@@ -140,66 +85,66 @@ describe('DOM rendering', ()=> {
   it('should `get()` underlying element', ()=> {
     let instance = $(<Component className='test'/>)
 
-    instance.get().should.equal(instance[0])
+    instance.get()[0].should.equal(instance[0])
   })
-
-  it('should set props', ()=> {
-    let instance = $(<Component className='test'/>)
-
-    instance.setProps({ min: 5 })
-
-    instance[0].props.min.should.equal(5)
-  })
-
+//
+//   it('should set props', ()=> {
+//     let instance = $(<Component className='test'/>)
+//
+//     instance.setProps({ min: 5 })
+//
+//     instance[0].props.min.should.equal(5)
+//   })
+//
   describe('querying', ()=> {
 
     describe('find', ()=> {
       it('should find by Component Types', ()=>{
-        let instance = $(<Component className='test'/>)
+        let instance = $(<Component className='test'/>).render()
 
-        instance.find(List).get().should.be.an.instanceof(List);
+        instance.find(List)[0].should.be.an.instanceof(List);
       })
 
       it('should find by Component Stateless Types', ()=>{
-        let instance = $(<Component className='test'/>)
+        let instance = $(<Component className='test'/>).render()
 
         instance.find(Stateless).length.should.equal(1);
       })
 
       it('should find by :composite', ()=>{
-        let instance = $(<Component className='test'/>)
+        let instance = $(<Component className='test'/>).render()
 
         let result = instance.find(':composite')
-        result.length.should.equal(2);
+        result.length.should.equal(3);
       })
 
       it('should find by :dom', ()=>{
-        let instance = $(<Component className='test'/>)
+        let instance = $(<Component className='test'/>).render()
 
         let result = instance.find(':dom')
         result.length.should.equal(10);
       })
 
-      it('should return stateless component dom nodes', ()=>{
-        let instance = $(<Component className='test'/>)
+      it('should return stateless component DOM nodes', ()=>{
+        let instance = $(<Component className='test'/>).render()
 
-        instance.find(Stateless).get().should.be.an.instanceof(HTMLElement);
+        instance.find(Stateless)[0].should.be.an.instanceof(HTMLElement);
       })
 
       it('should find by className', ()=>{
-        let instance = $(<Component className='test'/>)
+        let instance = $(<Component className='test'/>).render()
 
-        instance.find('.list-wrapper').get().tagName.should.equal('DIV');
+        instance.find('.list-wrapper')[0].tagName.should.equal('DIV');
       })
 
       it('should find by tag', ()=>{
-        let instance = $(<Component className='test'/>)
+        let instance = $(<Component className='test'/>).render()
 
         instance.find('li').length.should.equal(3);
       })
 
       it('should allow find chaining', ()=>{
-        let instance = $(<Component className='test'/>)
+        let instance = $(<Component className='test'/>).render()
 
         let items = instance
           .find('.list-wrapper')
@@ -222,55 +167,55 @@ describe('DOM rendering', ()=> {
 
     describe('is', ()=> {
       it('should recognize Component Types', ()=>{
-        let instance = $(<Component className='test'/>)
+        let instance = $(<Component className='test'/>).render()
 
         instance.is(Component).should.equal(true);
       })
 
       it('should recognize Stateless Types', ()=>{
-        let instance = $(<Stateless/>)
+        let instance = $(<Stateless/>).render()
 
         instance.is(Stateless).should.equal(true);
       })
 
       it('should recognize className', ()=>{
-        let instance = $(<span className='test'/>)
+        let instance = $(<span className='test'/>).render()
 
         instance.is('.test').should.equal(true);
       })
 
       it('should recognize tags', ()=>{
-        let instance = $(<span/>)
+        let instance = $(<span/>).render()
 
         instance.is('span').should.equal(true);
       })
 
       it('should recognize :composite', ()=>{
-        let instance = $(<List/>)
+        let instance = $(<List/>).render()
 
         instance.is(':composite').should.equal(true);
       })
 
       it('should recognize :dom', ()=>{
-        let instance = $(<span/>)
+        let instance = $(<span/>).render()
 
         instance.is(':dom').should.equal(true);
       })
 
       it('should work with find', ()=>{
-        let instance = $(<Component/>)
+        let instance = $(<Component/>).render()
 
         instance.find(Stateless).is(Stateless).should.equal(true);
       })
 
       it('should work with multiple matches', ()=>{
-        let instance = $(<Component/>)
+        let instance = $(<Component/>).render()
 
         instance.find('li').is('li').should.equal(true);
       })
 
       it('should work with chaining', ()=>{
-        let instance = $(<Component/>)
+        let instance = $(<Component/>).render()
 
         instance.find('li').is('.item').should.equal(false);
 
@@ -279,40 +224,22 @@ describe('DOM rendering', ()=> {
     })
 
     it('should: filter()', ()=>{
-      let items = $(<Component/>).find('li')
+      let items = $(<Component/>).render().find('li')
 
       items.length.should.equal(3)
 
       items.filter('.item').length.should.equal(1)
 
-      $(<Component/>).find('div > *').filter(List).length.should.equal(1)
+      $(<Component/>).render().find('div > *').filter(List).length.should.equal(1)
     })
 
     it('an empty filter should be a noop', ()=>{
-      let instance = $(<Component/>)
+      let instance = $(<Component/>).render()
       instance.filter().should.equal(instance)
     })
 
-    it('should find single', ()=> {
-      let instance = $(<Component className='test'/>)
-
-      instance.single(Stateless).length.should.equal(1)
-    })
-
-    it('should throw when single returns more than one', ()=> {
-      let instance = $(<Component className='test'/>)
-
-      ;(()=> instance.single('li')).should.throw()
-    })
-
-    it('should throw when single returns none', ()=> {
-      let instance = $(<Component className='test'/>)
-
-      ;(()=> instance.single('article')).should.throw()
-    })
-
     it('should get first', ()=> {
-      let instance = $(<Component className='test'/>)
+      let instance = $(<Component className='test'/>).render()
 
       instance.first('li')[0].textContent.should.equal('hi 1')
 
@@ -320,19 +247,43 @@ describe('DOM rendering', ()=> {
     })
 
     it('should get last', ()=> {
-      let instance = $(<Component className='test'/>)
+      let instance = $(<Component className='test'/>).render()
 
       instance.last('li')[0].textContent.should.equal('hi 3');
       instance.find('li').last()[0].textContent.should.equal('hi 3')
     })
 
+    it('should find single', ()=> {
+      let instance = $(<Component className='test'/>).render()
+
+      instance.single(Stateless).length.should.equal(1)
+    })
+
+    it('should throw when single returns more than one', ()=> {
+      let instance = $(<Component className='test'/>).render()
+
+      ;(()=> instance.single('li')).should.throw()
+    })
+
+    it('should throw when single returns none', ()=> {
+      let instance = $(<Component className='test'/>).render()
+
+      ;(()=> instance.single('article')).should.throw()
+    })
+
+    it('text content', ()=>{
+      $(<List/>).render().text().should.equal('Hello therehi 1hi 2hi 3')
+
+      $(<div>hi <span>{'john'}</span></div>).render().text().should.equal('hi john')
+    })
+
     it('should trigger event', ()=> {
       let clickSpy = sinon.spy();
-      let instance = $(<Component className='test' onClick={clickSpy}/>)
+      let instance = $(<Component className='test' onClick={clickSpy}/>).render()
 
       instance.find(List).trigger('click', { clickedYo: true })
 
       clickSpy.should.have.been.calledOnce
     })
-  })
+   })
 })
