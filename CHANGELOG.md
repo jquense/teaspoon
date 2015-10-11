@@ -1,3 +1,11 @@
+v4.0.0 - Sun, 11 Oct 2015 16:41:36 GMT
+--------------------------------------
+
+- [13ffd4d](../../commit/13ffd4d) [added] unified API
+- [73a16d4](../../commit/73a16d4) [changed] text() method for shallow render
+
+
+
 v1.0.0 - Sun, 11 Oct 2015 16:34:30 GMT
 --------------------------------------
 
