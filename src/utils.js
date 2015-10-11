@@ -87,6 +87,30 @@ export function findDOMNode(component){
         : ReactDOM.findDOMNode(component)
 }
 
+export function getInstanceChildren(inst){
+  let publicInst;
+
+  if (!inst) return [];
+
+  if (inst.getPublicInstance)
+    publicInst = inst.getPublicInstance()
+
+  if (ReactTestUtils.isDOMComponent(publicInst)) {
+    let renderedChildren = inst._renderedChildren || {};
+
+    return Object.keys(renderedChildren)
+      .map(key => renderedChildren[key])
+      .filter(node => typeof node._currentElement !== 'string' )
+  }
+  else if (isCompositeComponent(publicInst)) {
+    let rendered = inst._renderedComponent;
+    if (rendered && typeof rendered._currentElement !== 'string')
+      return [rendered]
+  }
+
+  return []
+}
+
 export function match(selector, tree, includeSelf){
   if (typeof selector === 'function')
     selector = s`${selector}`

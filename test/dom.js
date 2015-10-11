@@ -271,6 +271,12 @@ describe('DOM rendering', ()=> {
       ;(()=> instance.single('article')).should.throw()
     })
 
+    it('should get children', ()=> {
+      $(<Component />).render()
+        .find('ul')
+        .children().length.should.equal(3)
+    })
+
     it('text content', ()=>{
       $(<List/>).render().text().should.equal('Hello therehi 1hi 2hi 3')
 

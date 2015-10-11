@@ -2,7 +2,7 @@ import React, { cloneElement } from 'react';
 import $ from '../src/element';
 
 
-describe.only('Shallow rendering', ()=> {
+describe('Shallow rendering', ()=> {
   let Stateless = props => <div onClick={props.onClick}>{props.children}</div>
   let List = class extends React.Component {
     render(){
@@ -43,7 +43,7 @@ describe.only('Shallow rendering', ()=> {
     instance.context.should.equal(el)
   })
 
-  it.only('should query Composite Components', ()=>{
+  it('should query Composite Components', ()=>{
     $(<Element></Element>)
       .is(Element).should.equal(true)
 
@@ -101,7 +101,7 @@ describe.only('Shallow rendering', ()=> {
       instance.filter().should.equal(instance)
     })
 
-    it.only('text content', ()=>{
+    it('text content', ()=>{
       $(<List/>).shallowRender().text().should.equal('hi 1hi 2hi 3')
 
       $(<div>hi <span>{'john'}</span></div>).text().should.equal('hi john')

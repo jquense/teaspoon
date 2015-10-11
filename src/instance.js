@@ -6,10 +6,9 @@ import ReactTestUtils from'react-addons-test-utils';
 import closest from 'dom-helpers/query/closest';
 import createQueryCollection from './QueryCollection';
 import * as utils from './utils';
-import { match } from './utils';
 import selector from 'bill';
 
-let $ = createQueryCollection(match, selector, function init(components, context, mount){
+let $ = createQueryCollection(utils.match, selector, function init(components, context, mount){
   let first = components[0]
 
   mount = mount || (context && context._mountPoint) || utils.getMountPoint(first);
@@ -71,6 +70,12 @@ Object.assign($.fn, {
         .map(inst => inst._currentElement || inst)
         .join('')
     }, '')
+  },
+
+  children(selector) {
+    return this
+      ._reduce((result, inst) => result.concat(utils.getInstanceChildren(inst)), [])
+      .filter(selector)
   },
 
   trigger(event, data){
