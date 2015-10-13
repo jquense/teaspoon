@@ -1,2 +1,2 @@
 
-module.export = require('./element')
+module.exports = require('./element')
