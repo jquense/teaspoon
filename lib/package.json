@@ -1,11 +1,11 @@
 {
-  "name": "react-testutil-query",
-  "version": "3.0.0",
-  "description": "small wrapper around react test utils so I don't have to write long method names",
+  "name": "teaspoon",
+  "version": "4.1.1",
+  "description": "jQuery-esque Api for React elements and instances, supports complex css selectors",
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jquense/react-testutil-query"
+    "url": "https://github.com/jquense/teaspoon"
   },
   "keywords": [
     "react",
@@ -15,16 +15,17 @@
   "author": "jquense",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jquense/react-testutil-query/issues"
+    "url": "https://github.com/jquense/teaspoon/issues"
   },
-  "homepage": "https://github.com/jquense/react-testutil-query",
+  "homepage": "https://github.com/jquense/teaspoon",
   "peerDependencies": {
     "react": ">=0.14.0-rc1",
     "react-dom": ">=0.14.0-rc1"
   },
   "dependencies": {
-    "bill": "^1.1.0",
+    "bill": "^1.3.2",
     "dom-helpers": "^2.4.0",
+    "lodash": "^3.10.1",
     "react-addons-test-utils": "^0.14.0-rc1"
   }
 }
