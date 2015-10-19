@@ -36,6 +36,25 @@ describe('DOM rendering', ()=> {
     }
   }
 
+  let counterRef
+  let Counter = class extends React.Component {
+    constructor(){
+      super()
+      this.state = {count:0}
+      counterRef = this;
+    }
+
+    increment(){
+      this.setState({count:this.state.count + 1});
+    }
+
+    render(){
+      return (
+        <span className={this.state.count}>{this.state.count}</span>
+      )
+    }
+  }
+
   it('should wrap existing mounted component', ()=> {
     let mount = document.createElement('div')
       , instance = render(<div className='test'/>, mount)
@@ -86,6 +105,14 @@ describe('DOM rendering', ()=> {
     let instance = $(<Component className='test'/>)
 
     instance.get()[0].should.equal(instance[0])
+  })
+
+  it('should maintain state between renders', ()=>{
+    let counter = $(<Counter/>)
+
+    counter.render().dom().textContent.should.equal('0')
+    counterRef.increment()
+    counter.render().dom().textContent.should.equal('1')
   })
 //
 //   it('should set props', ()=> {
