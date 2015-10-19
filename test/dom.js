@@ -2,6 +2,7 @@ import React from 'react';
 import { unmountComponentAtNode, render } from 'react-dom';
 import $ from '../src/element';
 import * as utils from '../src/utils';
+import Counter from './Counter';
 
 describe('DOM rendering', ()=> {
   let Stateless = props => <div onClick={props.onClick}>{props.children}</div>
@@ -32,25 +33,6 @@ describe('DOM rendering', ()=> {
             <List onClick={this.props.onClick}/>
           </div>
         </div>
-      )
-    }
-  }
-
-  let counterRef
-  let Counter = class extends React.Component {
-    constructor(){
-      super()
-      this.state = {count:0}
-      counterRef = this;
-    }
-
-    increment(){
-      this.setState({count:this.state.count + 1});
-    }
-
-    render(){
-      return (
-        <span className={this.state.count}>{this.state.count}</span>
       )
     }
   }
@@ -111,7 +93,7 @@ describe('DOM rendering', ()=> {
     let counter = $(<Counter/>)
 
     counter.render().dom().textContent.should.equal('0')
-    counterRef.increment()
+    Counter.ref.increment()
     counter.render().dom().textContent.should.equal('1')
   })
 //

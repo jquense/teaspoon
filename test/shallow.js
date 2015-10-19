@@ -1,6 +1,6 @@
 import React, { cloneElement } from 'react';
 import $ from '../src/element';
-
+import Counter from './Counter';
 
 describe('Shallow rendering', ()=> {
   let Stateless = props => <div onClick={props.onClick}>{props.children}</div>
@@ -17,24 +17,6 @@ describe('Shallow rendering', ()=> {
             <li>hi 3</li>
           </ul>
         </div>
-      )
-    }
-  }
-  let counterRef
-  let Counter = class extends React.Component {
-    constructor(){
-      super()
-      this.state = {count:0}
-      counterRef = this;
-    }
-
-    increment(){
-      this.setState({count:this.state.count + 1});
-    }
-
-    render(){
-      return (
-        <span className={this.state.count}>{this.state.count}</span>
       )
     }
   }
@@ -89,7 +71,7 @@ describe('Shallow rendering', ()=> {
     let counter = $(<Counter/>)
 
     counter.shallowRender().context.props.className.should.equal(0)
-    counterRef.increment()
+    Counter.ref.increment()
     counter.shallowRender().context.props.className.should.equal(1)
   })
 
