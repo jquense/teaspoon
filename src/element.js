@@ -1,6 +1,5 @@
 import React, { isValidElement, cloneElement } from 'react';
 import ReactDOM from 'react-dom';
-import ReactTestUtils from'react-addons-test-utils';
 import createQueryCollection from './QueryCollection';
 import iQuery from './instance'
 import * as utils from './utils';
@@ -47,9 +46,8 @@ Object.assign(eQuery.fn, {
     if (isDomElement)
       return eQuery(element)
 
-    let renderer = ReactTestUtils.createRenderer()
-    renderer.render(element)
-    return eQuery(renderer.getRenderOutput());
+    this.renderer.render(element)
+    return eQuery(this.renderer.getRenderOutput());
   },
 
   children(selector) {

@@ -20,6 +20,24 @@ describe('Shallow rendering', ()=> {
       )
     }
   }
+  let counterRef
+  let Counter = class extends React.Component {
+    constructor(){
+      super()
+      this.state = {count:0}
+      counterRef = this;
+    }
+
+    increment(){
+      this.setState({count:this.state.count + 1});
+    }
+
+    render(){
+      return (
+        <span className={this.state.count}>{this.state.count}</span>
+      )
+    }
+  }
 
   it('create element collection', ()=>{
     let instance = $(<div/>)
@@ -65,6 +83,14 @@ describe('Shallow rendering', ()=> {
       )
 
     instance.children().length.should.equal(3)
+  })
+
+  it('should maintain state between renders', ()=>{
+    let counter = $(<Counter/>)
+
+    counter.shallowRender().context.props.className.should.equal(0)
+    counterRef.increment()
+    counter.shallowRender().context.props.className.should.equal(1)
   })
 
   describe('querying', ()=> {
