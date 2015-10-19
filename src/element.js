@@ -27,12 +27,14 @@ Object.assign(eQuery.fn, {
     if (intoDocument)
       document.body.appendChild(mount)
 
-    let instance = ReactDOM.render(element, mount);
+    if (!this.instance) {
+      this.instance = ReactDOM.render(element, mount);
 
-    if (instance === null)
-      instance = ReactDOM.render(utils.wrapStateless(element), mount)
+      if (this.instance === null)
+        this.instance = ReactDOM.render(utils.wrapStateless(element), mount)
+    }
 
-    return iQuery(instance, utils.getInternalInstance(instance), mount);
+    return iQuery(this.instance, utils.getInternalInstance(this.instance), mount);
   },
 
   shallowRender(props) {
