@@ -2,6 +2,7 @@ import React, { isValidElement, cloneElement } from 'react';
 import ReactDOM from 'react-dom';
 import createQueryCollection from './QueryCollection';
 import iQuery from './instance'
+import syncReact from './syncReact';
 import * as utils from './utils';
 import { selector } from 'bill';
 
@@ -67,5 +68,7 @@ Object.assign(eQuery.fn, {
   }
 
 })
+
+eQuery.syncReact = syncReact;
 
 export default eQuery;

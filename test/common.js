@@ -1,6 +1,8 @@
-import React from 'react';
 import { unmountComponentAtNode, render } from 'react-dom';
 import $ from '../src/element';
+import _React from 'react';
+const React = $.syncReact(_React);
+import Counter from './Counter';
 
 describe('common utils', ()=> {
   let Stateless = props => <div onClick={props.onClick}>{props.children}</div>
@@ -69,5 +71,47 @@ describe('common utils', ()=> {
 
     instance.length.should.equal(1)
     instance[0].type.should.equal('div')
+  })
+
+  describe('state synchronization between the shallow and deep rendered components', ()=>{
+    it('should stay sychronized when the state is initially changed in the shallow rendered component', ()=>{
+      let counter = $(<Counter/>)
+      counter.shallowRender()
+      let counterRef = Counter.ref
+
+      counter.shallowRender().context.props.className.should.equal(0)
+      counter.render().dom().textContent.should.equal('0')
+      counterRef.increment()
+      counter.shallowRender().context.props.className.should.equal(1)
+      counter.render().dom().textContent.should.equal('1')
+    })
+
+    it('should stay sychronized when the state is initially changed in the deep rendered component', ()=>{
+      let counter = $(<Counter/>)
+      counter.render()
+      let counterRef = Counter.ref
+
+      counter.shallowRender().context.props.className.should.equal(0)
+      counter.render().dom().textContent.should.equal('0')
+      counterRef.increment()
+      counter.shallowRender().context.props.className.should.equal(1)
+      counter.render().dom().textContent.should.equal('1')
+    })
+
+    it('should immediately synchronize the state of the shallow rendered component if state is already available', function() {
+      let counter = $(<Counter/>)
+
+      counter.render()
+      Counter.ref.increment()
+      counter.shallowRender().context.props.className.should.equal(1)
+    })
+
+    it('should immediately synchronize the state of the deep rendered component if state is already available', function() {
+      let counter = $(<Counter/>)
+
+      counter.shallowRender()
+      Counter.ref.increment()
+      counter.render().dom().textContent.should.equal('1')
+    })
   })
 })
