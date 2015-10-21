@@ -1,2 +1,1 @@
-
-module.exports = require('./element')
+export default './element';
