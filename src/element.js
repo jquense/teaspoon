@@ -1,8 +1,8 @@
 import React, { isValidElement, cloneElement } from 'react';
 import ReactDOM from 'react-dom';
-import ReactTestUtils from'react-addons-test-utils';
 import createQueryCollection from './QueryCollection';
 import iQuery from './instance'
+import syncReact from './syncReact';
 import * as utils from './utils';
 import { selector } from 'bill';
 
@@ -27,12 +27,14 @@ Object.assign(eQuery.fn, {
     if (intoDocument)
       document.body.appendChild(mount)
 
-    let instance = ReactDOM.render(element, mount);
+    if (!this.instance) {
+      this.instance = ReactDOM.render(element, mount);
 
-    if (instance === null)
-      instance = ReactDOM.render(utils.wrapStateless(element), mount)
+      if (this.instance === null)
+        this.instance = ReactDOM.render(utils.wrapStateless(element), mount)
+    }
 
-    return iQuery(instance, utils.getInternalInstance(instance), mount);
+    return iQuery(this.instance, utils.getInternalInstance(this.instance), mount);
   },
 
   shallowRender(props) {
@@ -47,9 +49,8 @@ Object.assign(eQuery.fn, {
     if (isDomElement)
       return eQuery(element)
 
-    let renderer = ReactTestUtils.createRenderer()
-    renderer.render(element)
-    return eQuery(renderer.getRenderOutput());
+    this.renderer.render(element)
+    return eQuery(this.renderer.getRenderOutput());
   },
 
   children(selector) {
@@ -67,5 +68,7 @@ Object.assign(eQuery.fn, {
   }
 
 })
+
+eQuery.syncReact = syncReact;
 
 export default eQuery;

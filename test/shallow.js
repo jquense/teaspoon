@@ -1,6 +1,6 @@
 import React, { cloneElement } from 'react';
 import $ from '../src/element';
-
+import Counter from './Counter';
 
 describe('Shallow rendering', ()=> {
   let Stateless = props => <div onClick={props.onClick}>{props.children}</div>
@@ -65,6 +65,14 @@ describe('Shallow rendering', ()=> {
       )
 
     instance.children().length.should.equal(3)
+  })
+
+  it('should maintain state between renders', ()=>{
+    let counter = $(<Counter/>)
+
+    counter.shallowRender().context.props.className.should.equal(0)
+    Counter.ref.increment()
+    counter.shallowRender().context.props.className.should.equal(1)
   })
 
   describe('querying', ()=> {

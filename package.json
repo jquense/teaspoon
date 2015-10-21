@@ -52,6 +52,7 @@
   },
   "dependencies": {
     "bill": "^1.3.2",
+    "deep-equal": "^1.0.1",
     "dom-helpers": "^2.4.0",
     "lodash": "^3.10.1",
     "react-addons-test-utils": "^0.14.0-rc1"

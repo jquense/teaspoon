@@ -2,6 +2,7 @@ import React from 'react';
 import { unmountComponentAtNode, render } from 'react-dom';
 import $ from '../src/element';
 import * as utils from '../src/utils';
+import Counter from './Counter';
 
 describe('DOM rendering', ()=> {
   let Stateless = props => <div onClick={props.onClick}>{props.children}</div>
@@ -86,6 +87,14 @@ describe('DOM rendering', ()=> {
     let instance = $(<Component className='test'/>)
 
     instance.get()[0].should.equal(instance[0])
+  })
+
+  it('should maintain state between renders', ()=>{
+    let counter = $(<Counter/>)
+
+    counter.render().dom().textContent.should.equal('0')
+    Counter.ref.increment()
+    counter.render().dom().textContent.should.equal('1')
   })
 //
 //   it('should set props', ()=> {
