@@ -2,7 +2,7 @@
   "name": "teaspoon",
   "version": "5.0.0",
   "description": "jQuery-esque Api for React elements and instances, supports complex css selectors",
-  "main": "lib/index.js",
+  "main": "lib/element.js",
   "scripts": {
     "test": "karma start --single-run",
     "tdd": "karma start",
