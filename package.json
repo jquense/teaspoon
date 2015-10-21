@@ -6,7 +6,7 @@
   "scripts": {
     "test": "karma start --single-run",
     "tdd": "karma start",
-    "build": "babel src --out-dir lib && cpy ./README.md ./lib",
+    "prepublish": "babel src --out-dir lib && cpy ./README.md ./lib",
     "release": "release"
   },
   "repository": {
