@@ -1,4 +1,3 @@
-import ReactTestUtils from'react-addons-test-utils';
 import common from './common';
 
 
@@ -48,7 +47,6 @@ export default function(match, selector, init){
 
       this._isQueryCollection = true
       this.length = elements.length;
-      this.renderer = ReactTestUtils.createRenderer()
     }
 
     $.fn.init.prototype = $.fn
