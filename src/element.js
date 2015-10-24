@@ -47,9 +47,11 @@ Object.assign(eQuery.fn, {
     if (isDomElement)
       return eQuery(element)
 
-    let renderer = ReactTestUtils.createRenderer()
-    renderer.render(element)
-    return eQuery(renderer.getRenderOutput());
+    if(!this.renderer)
+      this.renderer = ReactTestUtils.createRenderer()
+
+    this.renderer.render(element)
+    return eQuery(this.renderer.getRenderOutput());
   },
 
   children(selector) {
