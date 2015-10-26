@@ -97,9 +97,7 @@ export default function($){
     },
 
     node() {
-      if (this.length !== 1) throw new Error('There were: ' + this.length + ' items not 1 ');
-
-      return this[0];
+      return this.single()[0]
     }
   })
 }

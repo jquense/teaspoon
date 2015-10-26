@@ -76,11 +76,4 @@ describe('common utils', ()=> {
 
     instance.node().type.should.equal('div')
   })
-
-  // TODO: this test can most neatly be written using an assertion library like chai or expectations
-  xit('should error if there are no nodes to be retrieved', ()=>{
-    let instance = $(<Stateless name='hi'/>).shallowRender().filter('NoSuchElem')
-
-    expect(()=>instance.node()).to.throw(Error);
-  })
 })
