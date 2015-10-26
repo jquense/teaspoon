@@ -70,4 +70,17 @@ describe('common utils', ()=> {
     instance.length.should.equal(1)
     instance[0].type.should.equal('div')
   })
+
+  it('should allow the first node to retrieved', ()=>{
+    let instance = $(<Stateless name='hi'/>).shallowRender()
+
+    instance.node().type.should.equal('div')
+  })
+
+  // TODO: this test can most neatly be written using an assertion library like chai or expectations
+  xit('should error if there are no nodes to be retrieved', ()=>{
+    let instance = $(<Stateless name='hi'/>).shallowRender().filter('NoSuchElem')
+
+    expect(()=>instance.node()).to.throw(Error);
+  })
 })
