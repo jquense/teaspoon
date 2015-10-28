@@ -94,6 +94,10 @@ export default function($){
       return selector
         ? this.find(selector).only()
         : this.only()
+    },
+
+    unwrap() {
+      return this.single()[0]
     }
   })
 }
