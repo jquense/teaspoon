@@ -96,7 +96,7 @@ export default function($){
         : this.only()
     },
 
-    node() {
+    unwrap() {
       return this.single()[0]
     }
   })

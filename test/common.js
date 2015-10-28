@@ -74,6 +74,6 @@ describe('common utils', ()=> {
   it('should allow the first node to retrieved', ()=>{
     let instance = $(<Stateless name='hi'/>).shallowRender()
 
-    instance.node().type.should.equal('div')
+    instance.unwrap().type.should.equal('div')
   })
 })
