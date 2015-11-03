@@ -204,6 +204,11 @@ $list.single('li') // Error! Matched more than one <li/>
 $list.single('.foo').length // 1
 ```
 
+#### `$.fn.unwrap()`
+
+Unwraps a collection of a single item returning the item. Equivalent to `$el[0]`; throws when there
+is more than one item in the collection.
+
 #### `$.fn.text()`
 
 Return the text content of the matched Collection.
