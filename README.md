@@ -3,15 +3,30 @@ teaspoon
 
 A jQuery like API for querying React elements and rendered components.
 
-## API
 
-Like jQuery the exported function creates a collection of nodes, except in this case you select React elements instead
+- [Getting started](#getting-started)
+- [api](api)
+  - [Common Collection methods](#common-collection-methods)  
+  - [Element Collections](#elementcollection-api)  
+  - [Component Instance Collections](#instancecollection-api)  
+
+## Getting Started
+
+To get started install teaspoon via npm:
+
+```sh
+npm i --save-dev teaspoon
+```
+
+Teaspoon is test enviroment agnostic, so you can (and should) bring your own test runner and frameworks. If you plan on doing normal component rendering (not jsut shallow rendering) you will also need a DOM enviroment, whether thats a browser, headless browser, jsdom.
+
+Like jQuery teaspon exports a function that creates collections of nodes; except in this case you select React elements instead
 of DOM nodes.
 
 ```js
 import $ from 'teaspoon';
 
-let $div = $(<div/>);
+let $div = $(<div />);
 
 $div.length // 1
 $div[0]     // ReactElement{ type: 'div', props: {} ... }
@@ -35,60 +50,56 @@ $elements.find('div.fun-div').length // 1
 $elements.find(MyInput).length // 2
 ```
 
-`teaspoon` actually supports _two_ types of collections, we've already seen Element Collections,
-but you can also work with Component _instance_ collections as well for querying rendered components.
+Along with plain ol ReactElements you can also use teaspoon to traverse a rendered component tree.
 
 ```js
-let instance = ReactDOM.render(<Component/>, mountNode)
+let Greeting = props => <div>hello <strong>{props.name}</strong></div>;
+
+let instance = ReactDOM.render(<Greeting name='John' />, mountNode)
 
 let $instance = $(instance);
 
-$instance.dom() // HTMLElement
+$instance.find('strong').text() // "John"
 ```
 
-There is even a quick way to switch between them.
+That's nice but a bit verbose, luckily teaspoon lets you switch between both collection types 
+(element and instance) nice and succinctly. 
 
 ```js
-let elements = (
-  <MyComponent>
-    <MyInput/>
-    <MyInput/>
-    <div className='fun-div'>  
-  </MyComponent>
-);
+let Greeting = props => <div>hello <strong>{props.name}</strong></div>;
 
-var $elements = $(elements).render(); // renders `<MyComponent/>` into the DOM and returns an InstanceCollection
+// renders `<Greeting/>` into the DOM and returns an InstanceCollection
+var $elements = $(<Greating />).render(); /
 
-$elements.find(MyInput).dom() // HTMLElement{ tagName: 'input' ... }
+$elements.find('strong').text() // "John"
 
 $elements.unmount() // removes the mounted component and returns an ElementCollection
+
+//or with shallow rendering
+$elements.shallowRender()
+  .find('strong').text() // "John"
 ```
 
 ### Using selectors
 
-The supported selector syntax is subset of standard css selectors. You can query by tag: `'div > li'` or
-by `className` with `'.my-class'`. Attribute selectors work on props: `'[show=true]'` or `'[name="my-input"]'`.
-You can even use the `has()` pseudo selector for selecting parents. You can also use two React
-specific pseudo selectors: `':dom'` and `':composite'` to select DOM and Composite Components respectively.
+The supported selector syntax is subset of standard css selectors. 
+
+- You can query by tag or component name: `'div > Greeting'`
+- by `className` with `'.my-class'`. 
+- Attribute selectors work on props: `'[show=true]'` or `'[name="my-input"]'`.
+- You can even use the `has()` pseudo selector for selecting parents: `ul > li.foo:has(span > p.bar)`
+- You can also use two React specific pseudo selectors: `':dom'` and `':composite'` to select DOM and Composite Components respectively.
 
 Unlike normal css selectors though, React Elements often have prop values, and element types that are not serializable
-to a string. What if you needed to select a `MyList` component by its "tag" or wanted to get all elements with
-a `date` prop equal to today?
+to a string; components names are often best seelcted by their actual class and not a name, and prop values are often not strings such as `date` equaling `new Date()`.
 
-With Component names you can use function or `displayName` of the component if you trust them.
-
-```js
-$(<Component>).render().find('div > List.foo')
-```
-
-Alternatively, and more robustly, you use a [tagged template string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/template_strings#Tagged_template_strings).
+For components we've already seen that you can use the constructor function name or the `displayName` but sometimes they aren't available. Alternatively, and more robustly, you use a [tagged template string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/template_strings#Tagged_template_strings).
 via the `$.selector` (also aliased as `$.s`) function for writing complex selectors like so:
 
-```
-//select all `<MyList/>`s that are children of divs
-$.s`div > ${List}`
+```js
+$.s`div > ${Greeting}`
 
-//select components with `start` props equal to `min`
+// select components with `start` props _strictly_ equal to `min`
 let min = 10
 $.s`[start=${min}]`
 ```
@@ -96,8 +107,31 @@ $.s`[start=${min}]`
 If you don't want to use the newer syntax you can also call the `selector` function directly like:
 
 ```js
-$.s('div > ', List, '.foo') // equivalent to: $.s`div > ${List}.foo`
+$.s('div > ', Greeting, '.foo') // equivalent to: $.s`div > ${Greeting}.foo`
 ```
+
+Use can use these complex selectors in any place a selector is allowed:
+
+```js
+let Name = props => <strong>{props.name}</strong>;
+let Time = props => <em>{props.date.toLocaleString()}</em>
+let Greeting = props => <div>hello <Name {...props} /> its: <Time {...props} /></div>;
+
+let now = new Date();
+let $inst = $(<Greeting name='John' date={now} />);
+
+$inst
+  .render()
+  .find($.s`${Greeting} > strong`)
+  .text()
+  
+$inst
+  .shallowRender()
+  .find($.s`${Time}[date=${now}]`)
+  .only()  
+```
+
+## API
 
 ### Common Collection methods
 
@@ -113,7 +147,13 @@ Search all descendants of the current collection, matching against
 the provided selector.
 
 ```js
-$(<ul><li>item 1</li></ul>).find('ul > li')
+$(
+<div>
+  <ul>
+    <li>item 1</li>
+  </ul>
+</div>
+).find('ul > li')
 ```
 
 #### `$.fn.filter(selector)`
@@ -181,9 +221,9 @@ let $list = $(
   </ul>
 );
 
-$list.find('li').only('li') // Error! Matched more than one <li/>
+$list.find('li').only() // Error! Matched more than one <li/>
 
-$list.find('li').only('.foo').length // 1
+$list.find('li.foo').only().length // 1
 ```
 
 #### `$.fn.single(selector)`
@@ -214,7 +254,9 @@ is more than one item in the collection.
 Return the text content of the matched Collection.
 
 ```js
-$(<div>Hello <strong>John</strong></div).text() // "Hello John"
+let $els = $(<div>Hello <strong>John</strong></div)
+
+$els.text() // "Hello John"
 ```
 
 #### `$.fn.get() -> Array`
@@ -233,6 +275,18 @@ $(<MyComponent/>).render()
   })
 ```
 
+#### `$.fn.map(Function iteratorFn)`
+
+An analog to `[].map`; maps over the collection calling the `iteratorFn` with each item, idx, and collection
+
+```js
+$(<MyComponent/>).render()
+  .find('div')
+  .map((node, index, collection) => {
+    //do something
+  })
+```
+
 #### `$.fn.reduce(Function iteratorFn, [initialValue])`
 
 An analog to `[].reduce`, returns a new _reduced_ teaspoon Collection
@@ -245,10 +299,12 @@ $(<MyComponent/>).render()
   }, '')
 ```
 
+
+
 ### ElementCollection API
 
 ElementCollections are created when selecting ReactElements. They
-also have all the above "common" methods
+also have all the above "common" methods. ShallowRendering creates and operates on ElementCollections as well.
 
 #### `$(ReactElement element) -> ElementCollection`
 
