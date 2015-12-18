@@ -18,9 +18,9 @@ To get started install teaspoon via npm:
 npm i --save-dev teaspoon
 ```
 
-Teaspoon is test enviroment agnostic, so you can (and should) bring your own test runner and frameworks. If you plan on doing normal component rendering (not jsut shallow rendering) you will also need a DOM enviroment, whether thats a browser, headless browser, jsdom.
+Teaspoon is test enviroment agnostic, so you can (and should) bring your own test runner and frameworks. If you plan on doing normal component rendering (not just shallow rendering) you will also need a DOM environment, whether thats a browser, headless browser, or jsdom.
 
-Like jQuery teaspon exports a function that creates collections of nodes; except in this case you select React elements instead
+Like jQuery teaspoon exports a function that creates a collection of nodes; except in this case you select React elements instead
 of DOM nodes.
 
 ```js
@@ -50,7 +50,7 @@ $elements.find('div.fun-div').length // 1
 $elements.find(MyInput).length // 2
 ```
 
-Along with plain ol ReactElements you can also use teaspoon to traverse a rendered component tree.
+Along with plain ol' ReactElements you can also use teaspoon to traverse a rendered component tree. Teaspoon also does a bunch of work under the hood to normalize the traversal behavior of DOM components, Custom Components, and Stateless function Components.
 
 ```js
 let Greeting = props => <div>hello <strong>{props.name}</strong></div>;
