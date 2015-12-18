@@ -5,7 +5,7 @@ A jQuery like API for querying React elements and rendered components.
 
 
 - [Getting started](#getting-started)
-- [api](api)
+- [api](#api)
   - [Common Collection methods](#common-collection-methods)  
   - [Element Collections](#elementcollection-api)  
   - [Component Instance Collections](#instancecollection-api)  
@@ -345,7 +345,8 @@ $(<MyComponent/>).shallowRender().is('div') // true
 ```
 
 
-### InstanceCollection
+
+### InstanceCollection API
 
 InstanceCollections are created when selecting Component instances, such as
 the result of a `ReactDOM.render()` call.
