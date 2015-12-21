@@ -8,19 +8,54 @@ import { selector } from 'bill';
 
 let isComponent = el => utils.isDOMComponent(el) || utils.isCompositeComponent(el)
 
-let eQuery = createQueryCollection(utils.match, selector, function init(elements, context){
-  let first = elements.filter(e => !!e)[0];
+function spyOnUpdate(inst, fn) {
+  if (!inst) return;
+  let didUpdate = inst.componentDidUpdate;
+
+  inst.componentDidUpdate = function(...args) {
+    fn(...args)
+    didUpdate && didUpdate(...args)
+  }
+}
+
+let renderWarned = false;
+
+let eQuery = createQueryCollection(utils.match, selector, function init(elements, context, renderer) {
+  let first = elements.filter(e => !!e)[0]
+    , root = (context && context._root);
+
   if (first && isComponent(first))
     return iQuery(elements);
 
+  if (renderer) {
+    this._renderer = renderer; // different name to protect back compat
+
+    if (!root) {
+      root = this
+      spyOnUpdate(root._instance(), ()=> root.update())
+    }
+    this._root = root
+  }
+
   return elements.filter(el => isValidElement(el))
 })
+
+let assertRoot = (inst, msg) =>  {
+  if (inst._root && inst._root !== inst)
+    throw new Error(msg || 'You can only preform this action on "root" element.')
+}
+
+eQuery.instance = iQuery
 
 Object.assign(eQuery.fn, {
 
   _reduce: eQuery.fn.reduce,
 
-  render(intoDocument, mountPoint){
+  _instance() {
+    return this._renderer && this._renderer._instance._instance;
+  },
+
+  render(intoDocument, mountPoint) {
     var mount = mountPoint || document.createElement('div')
       , element = this[0];
 
@@ -47,11 +82,23 @@ Object.assign(eQuery.fn, {
     if (isDomElement)
       return eQuery(element)
 
-    if(!this.renderer)
+    if (!this.renderer)
       this.renderer = ReactTestUtils.createRenderer()
 
-    this.renderer.render(element)
-    return eQuery(this.renderer.getRenderOutput());
+    this.renderer.render(element);
+
+    element = this.renderer.getRenderOutput();
+
+    return eQuery(element, element, this.renderer);
+  },
+
+  update() {
+    if (!this._renderer)
+      throw new Error('You can only preform this action on a "root" element.')
+
+    this.context =
+      this[0] = this._renderer.getRenderOutput()
+    return this
   },
 
   children(selector) {
