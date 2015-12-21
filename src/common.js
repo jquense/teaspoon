@@ -25,10 +25,8 @@ export default function($){
       return this
     },
 
-    get() {
-      var result = []
-      this.each(el => result.push(el))
-      return result
+    tap(fn) {
+      fn.call(this, this)
     },
 
     reduce(cb, initial){
@@ -42,13 +40,19 @@ export default function($){
       }, [])
     },
 
+    get() {
+      var result = []
+      this.each(el => result.push(el))
+      return result
+    },
+
     find(selector) {
       return this._reduce((result, element) => {
         return result.concat($.match(selector, element, false))
       }, [])
     },
 
-    traverse(test){
+    traverse(test) {
       return this._reduce((result, element) => {
         return result.concat(utils.traverse(element, test))
       }, [])
