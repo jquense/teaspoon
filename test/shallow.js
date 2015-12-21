@@ -85,12 +85,66 @@ describe('Shallow rendering', ()=> {
     instance.children().length.should.equal(3)
   })
 
+  it('should get props', ()=>{
+    let counter = $(<Counter/>)
+
+    counter.shallowRender().prop('className').should.equal(0)
+  })
+
+  it('should get state', ()=>{
+    let counter = $(<Counter/>)
+
+    counter.shallowRender().state().should.eql({
+      count: 0
+    });
+
+    counter.shallowRender().state('count').should.equal(0)
+  })
+
   it('should maintain state between renders', ()=>{
     let counter = $(<Counter/>)
 
     counter.shallowRender().context.props.className.should.equal(0)
     counterRef.increment()
     counter.shallowRender().context.props.className.should.equal(1)
+  })
+
+  it('should update', ()=>{
+    let counter = $(<Counter/>).shallowRender()
+
+    counter.prop('className').should.equal(0)
+    counterRef.increment()
+    counter.update()
+    counter.prop('className').should.equal(1)
+  })
+
+  it('should throw when updating none root elements', ()=> {
+    let counter = $(<List/>).shallowRender()
+
+    ;(() => counter.find('ul').update())
+      .should.throw('You can only preform this action on a "root" element.')
+  })
+
+  it('should update root collections', ()=> {
+    let count = 0;
+    let Component = React.createClass({
+      componentDidUpdate(){
+        count++
+      },
+      render() {
+        return (
+          <div>
+            <span onClick={() => this.setState({ called: true })} />
+          </div>
+        )
+      }
+    })
+
+    let root = $(<Component />).shallowRender();
+
+    root.find('span').trigger('click')
+    count.should.equal(1)
+    root.state().should.eql({ called: true })
   })
 
   describe('querying', ()=> {

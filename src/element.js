@@ -1,6 +1,7 @@
 import React, { isValidElement, cloneElement } from 'react';
 import ReactDOM from 'react-dom';
 import ReactTestUtils from'react-addons-test-utils';
+import warning from 'warning';
 import createQueryCollection from './QueryCollection';
 import iQuery from './instance'
 import * as utils from './utils';
@@ -84,6 +85,11 @@ Object.assign(eQuery.fn, {
 
     if (!this.renderer)
       this.renderer = ReactTestUtils.createRenderer()
+    else {
+      warning(renderWarned,
+        'Calling `shallowRender` to update a collection is deprecated, use `update()` instead')
+      renderWarned = true;
+    }
 
     this.renderer.render(element);
 
@@ -107,12 +113,25 @@ Object.assign(eQuery.fn, {
       .filter(selector)
   },
 
-  text(){
+  text() {
     let isText = el => typeof el === 'string';
 
     return this.get().reduce((str, element)=> {
       return str + utils.traverse(element, isText).join('')
     }, '')
+  },
+
+  prop(key) {
+    return key ? this[0].props[key] : this[0].props;
+  },
+
+  state(key) {
+    assertRoot(this, 'Only "root" rendered elements can have state')
+
+    let state = this._instance().state;
+
+    return key && state ? state[key] : state
+  },
   }
 
 })

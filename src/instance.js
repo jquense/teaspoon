@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import ReactUpdateQueue from 'react/lib/ReactUpdateQueue';
 import ReactInstanceMap from 'react/lib/ReactInstanceMap';
 import ReactTestUtils from'react-addons-test-utils';
 
@@ -44,7 +45,7 @@ Object.assign($.fn, {
     return $(this._subjects().reduce(cb, initial), this)
   },
 
-  unmount(){
+  unmount() {
     let inBody = this._mountPoint.parentNode
       , nextContext = this.context._currentElement;
 
@@ -58,8 +59,36 @@ Object.assign($.fn, {
     return eQuery(nextContext)
   },
 
-  dom(){
+  dom() {
     return unwrap(this._map($.dom))
+  },
+
+  element() {
+    return eQuery(this._subjects().map(
+      inst => React.cloneElement(inst._currentElement)))
+  },
+
+  prop(key, value, cb) {
+    if (typeof key === 'string') {
+      if (arguments.length === 1)
+        return this._privateInstances[0].props[key];
+      else
+        key = { [key]: value }
+    }
+
+    this._subjects(inst => {
+      ReactUpdateQueue.enqueueSetPropsInternal(inst, props)
+      if (cb)
+        ReactUpdateQueue.enqueueCallbackInternal(inst, cb)
+    })
+  },
+
+  state(key) {
+    return this._privateInstances[0].state[key];
+  },
+
+  context(key) {
+    return this._privateInstances[0].context[key];
   },
 
   text(){
@@ -78,7 +107,7 @@ Object.assign($.fn, {
       .filter(selector)
   },
 
-  trigger(event, data){
+  trigger(event, data) {
     data = data || {}
 
     if (event.substr(0, 2) === 'on' )
