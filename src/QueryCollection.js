@@ -4,7 +4,6 @@ import common from './common';
 export default function(match, selector, init){
 
   function QueryCollection(...args){
-
     return new QueryCollection.fn.init(...args)
   }
 
@@ -27,7 +26,7 @@ export default function(match, selector, init){
 
   return QueryCollection
 
-  function createInit($){
+  function createInit($) {
 
     $.fn.init = function $init(element, context, ...args){
       let elements = element == null ? [] : [].concat(element);
