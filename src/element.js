@@ -132,6 +132,17 @@ Object.assign(eQuery.fn, {
 
     return key && state ? state[key] : state
   },
+
+  trigger(event, ...args) {
+    if (event.indexOf('on') !== 0)
+      event = 'on' + event[0].toUpperCase() + event.substr(1)
+
+    return this.each(component => {
+      component.props[event]
+        && component.props[event](...args)
+
+      this._root && this._root.update()
+    });
   }
 
 })
