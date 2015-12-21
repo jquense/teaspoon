@@ -21,7 +21,7 @@ export default function($){
 
     each(cb, thisArg) {
       var idx = -1, len = this.length;
-      while (++idx < len) cb.call(thisArg, this[idx], idx, this)
+      while (++idx < len) cb.call(thisArg || this, this[idx], idx, this)
       return this
     },
 
