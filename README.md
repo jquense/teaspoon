@@ -209,6 +209,23 @@ $list.single('.foo').length // 1
 Unwraps a collection of a single item returning the item. Equivalent to `$el[0]`; throws when there
 is more than one item in the collection.
 
+
+#### `$.fn.prop(String propName)`
+
+Return a prop value.
+
+#### `$.fn.state(String propName)`
+
+Return a state value.
+
+__remember:__ when shallow rendering, only the "root" element will possibly have state.
+
+#### `$.fn.context(String propName)`
+
+Return a context value.
+
+__remember:__ when shallow rendering, only the "root" element will possibly have context.
+
 #### `$.fn.text()`
 
 Return the text content of the matched Collection.
@@ -287,7 +304,25 @@ $(<MyComponent/>).find('div').length // 0
 
 $(<MyComponent/>).shallowRender().is('div') // true
 ```
+### `$.fn.update()`
 
+Rerenders and updates a shallowly rendered element collection.
+
+__note:__ `.update()` must be called on a "root" collection (the result of `.shallowRender()`)
+
+#### `$.fn.trigger(String eventName, [Object data])`
+
+"trigger" an event on an element. More of convenience method than a real event trigger, since shallow rendering
+doesn't actually involve DOM event system. `trigger()` looks for a function prop of the element and calls it, it also
+updates the root collection, so that any state/context/prop changes at the top component propagate down.
+
+```js
+let root = $(<Component/>).shallowRender()
+
+root.find('button').trigger('click', {
+  target: { value: 'hello' }
+})
+```
 
 ### InstanceCollection
 
@@ -314,5 +349,5 @@ ElementCollection of the _root_ component element.
 Trigger a "synthetic" (React) event on the collection items.
 
 ```js
-$(<Component/>).render().trigger('click', { target: { value: 'hello ' } }).
+$(<Component/>).render().trigger('click', { target: { value: 'hello' } }).
 ```
