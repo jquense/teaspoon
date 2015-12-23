@@ -1,53 +1,46 @@
 import common from './common';
+import { createNode } from 'bill/node';
+import { selector } from 'bill';
+import { match, getPublicInstances } from './utils';
 
+export default function createCollection(ctor) {
+  let $ = QueryCollection
 
-export default function(match, selector, init){
+  function QueryCollection(element, lastCollection) {
+    if (!(this instanceof QueryCollection))
+      return new QueryCollection(element, lastCollection)
 
-  function QueryCollection(...args){
-    return new QueryCollection.fn.init(...args)
+    let elements = element == null ? [] : [].concat(element);
+
+    if (element && $.isQueryCollection(element)) {
+      return new element.constructor(element.get(), element)
+    }
+
+    this._isQueryCollection = true
+    this.context = lastCollection || this
+    this.nodes = elements.map(el => createNode(el))
+    this.length = elements.length
+
+    getPublicInstances(this.nodes)
+      .forEach((el, idx)=> this[idx] = el)
+
+    return ctor.call(this, element, lastCollection)
   }
 
-  Object.assign(QueryCollection, {
+  Object.assign($, {
     match,
     selector,
     s: selector,
-    isQueryCollection(inst){
+    isQueryCollection(inst) {
       return !!inst._isQueryCollection
     }
   })
 
-  QueryCollection.fn =
-    QueryCollection.prototype = {
-      constructor: QueryCollection,
-    }
-
-  createInit(QueryCollection)
-  common(QueryCollection)
-
-  return QueryCollection
-
-  function createInit($) {
-
-    $.fn.init = function $init(element, context, ...args){
-      let elements = element == null ? [] : [].concat(element);
-
-      if ($.isQueryCollection(element)) {
-        return new element.constructor(element.get(), element.context)
-      }
-      else {
-        this.context = (context && context.context) || context || element;
-        elements = init.call(this, elements, context, ...args);
-      }
-
-      if ($.isQueryCollection(elements))
-        return elements
-
-      elements.forEach((el, idx)=> this[idx] = el)
-
-      this._isQueryCollection = true
-      this.length = elements.length;
-    }
-
-    $.fn.init.prototype = $.fn
+  $.fn = $.prototype = {
+    constructor: $,
   }
+
+  common($)
+
+  return $
 }

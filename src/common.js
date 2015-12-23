@@ -1,4 +1,24 @@
+import { findAll } from 'bill';
+import { NODE_TYPES } from 'bill/node';
 import * as utils from './utils';
+import findIndex from 'lodash/array/findIndex';
+
+function indexOfNode(arr, findNode) {
+  return findIndex(arr, (node, i) => {
+    return node === findNode ||
+      (node.privateInstance || node.element) === (findNode.privateInstance || findNode.element)
+  })
+}
+
+function noTextNodes(nodes) {
+  return nodes.filter(node => node.nodeType !== NODE_TYPES.TEXT)
+}
+
+function assertLength(collection, method) {
+  if (collection.length === 0)
+    throw new Error('the method `' + method + '()` found no matching elements')
+  return collection
+}
 
 export default function($){
 
@@ -8,10 +28,31 @@ export default function($){
     }
   })
 
-  Object.assign($.fn, {
-    _subjects: $.fn.get,
+  // return values
+  ;['every', 'some']
+    .forEach(method => {
+      let fn = [][method];
 
-    _reduce: $.fn.reduce,
+      $.fn[method] = function (...args) {
+        return fn.apply(this, args)
+      }
+    })
+
+  // return collections
+  ;['map', 'reduce', 'reduceRight']
+    .forEach(method => {
+      let fn = [][method];
+
+      $.fn[method] = function (...args) {
+        return $(fn.apply(this, args))
+      }
+    })
+
+  Object.assign($.fn, {
+
+    _reduce(...args) {
+      return $(this.nodes.reduce(...args), this)
+    },
 
     _map(cb){
       var result = []
@@ -19,25 +60,14 @@ export default function($){
       return result
     },
 
-    each(cb, thisArg) {
-      var idx = -1, len = this.length;
-      while (++idx < len) cb.call(thisArg || this, this[idx], idx, this)
-      return this
+    each(fn, thisArg) {
+      [].forEach.call(this, fn, thisArg || this)
+      return this;
     },
 
     tap(fn) {
       fn.call(this, this)
-    },
-
-    reduce(cb, initial){
-      return $([].reduce.call(this, cb, initial), this)
-    },
-
-    map(cb) {
-      return this.reduce((result, ...args) => {
-        result.push(cb(...args))
-        return result
-      }, [])
+      return this
     },
 
     get() {
@@ -46,26 +76,26 @@ export default function($){
       return result
     },
 
-    find(selector) {
-      return this._reduce((result, element) => {
-        return result.concat($.match(selector, element, false))
+    find(selector, includeSelf = false) {
+      return this._reduce((result, node) => {
+        return result.concat(utils.match(selector, node, includeSelf))
       }, [])
     },
 
     traverse(test) {
-      return this._reduce((result, element) => {
-        return result.concat(utils.traverse(element, test))
+      return this._reduce((result, node) => {
+        return result.concat(findAll(node, test))
       }, [])
     },
 
     filter(selector) {
       if (!selector) return this
 
-      let matches = $.match(selector, this.context, true);
+      let matches = utils.match(selector, this.context.nodes[0], true);
 
-      return this._reduce((result, element) => {
-        if (matches.indexOf(element) !== -1)
-          result.push(element);
+      return this._reduce((result, node) => {
+        if (indexOfNode(matches, node) !== -1)
+          result.push(node);
 
         return result
       }, [])
@@ -75,21 +105,34 @@ export default function($){
       return this.filter(selector).length === this.length
     },
 
-    first(selector){
+    children(selector) {
+      return this
+        ._reduce((result, node) => result.concat(noTextNodes(node.children)), [])
+        .filter(selector)
+    },
+
+    text() {
+      let isText = el => typeof el === 'string';
+
+      return this.find(':text').nodes
+        .reduce((str, node) => str + node.element, '')
+    },
+
+    first(selector) {
       return selector
         ? this.find(selector).first()
-        : $(this[0], this)
+        : $(assertLength(this, 'first')[0], this)
     },
 
-    last(selector){
+    last(selector) {
       return selector
         ? this.find(selector).last()
-        : $(this[this.length - 1], this)
+        : $(assertLength(this, 'last')[this.length - 1], this)
     },
 
-    only(){
+    only() {
       if (this.length !== 1)
-        throw new Error('The query found: ' + this.length + ' items not 1 ')
+        throw new Error('The query found: ' + this.length + ' items not 1')
 
       return this.first()
     },
@@ -102,6 +145,10 @@ export default function($){
 
     unwrap() {
       return this.single()[0]
+    },
+
+    elements() {
+      return this.nodes.map(node => node.element)
     }
   })
 }

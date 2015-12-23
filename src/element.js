@@ -7,7 +7,10 @@ import iQuery from './instance'
 import * as utils from './utils';
 import { selector } from 'bill';
 
-let isComponent = el => utils.isDOMComponent(el) || utils.isCompositeComponent(el)
+function assertRoot(inst, msg) {
+  if (inst.context && inst.context !== inst)
+    throw new Error(msg || 'You can only preform this action on "root" element.')
+}
 
 function spyOnUpdate(inst, fn) {
   if (!inst) return;
@@ -19,38 +22,19 @@ function spyOnUpdate(inst, fn) {
   }
 }
 
-let renderWarned = false;
 
-let eQuery = createQueryCollection(utils.match, selector, function init(elements, context, renderer) {
-  let first = elements.filter(e => !!e)[0]
-    , root = (context && context._root);
 
-  if (first && isComponent(first))
-    return iQuery(elements);
-
-  if (renderer) {
+let $ = createQueryCollection(function (elements, lastCollection) {
+  if (lastCollection && lastCollection.renderer) {
+    this.context = this;
     this._renderer = renderer; // different name to protect back compat
-
-    if (!root) {
-      root = this
-      spyOnUpdate(root._instance(), ()=> root.update())
-    }
-    this._root = root
+    spyOnUpdate(this._instance(), ()=> this.update())
   }
-
-  return elements.filter(el => isValidElement(el))
 })
 
-let assertRoot = (inst, msg) =>  {
-  if (inst._root && inst._root !== inst)
-    throw new Error(msg || 'You can only preform this action on "root" element.')
-}
+$.instance = iQuery
 
-eQuery.instance = iQuery
-
-Object.assign(eQuery.fn, {
-
-  _reduce: eQuery.fn.reduce,
+Object.assign($.fn, {
 
   _instance() {
     return this._renderer && this._renderer._instance._instance;
@@ -65,37 +49,36 @@ Object.assign(eQuery.fn, {
 
     let instance = ReactDOM.render(element, mount);
 
-    if (instance === null)
+    if (instance === null) {
       instance = ReactDOM.render(utils.wrapStateless(element), mount)
+      instance = utils.getInternalInstance(instance)
+    }
 
-    return iQuery(instance, utils.getInternalInstance(instance), mount);
+    return iQuery(instance);
   },
 
-  shallowRender(props) {
+  shallowRender(props, context) {
     if (!this.length) return this
 
     let element = this[0];
-    let isDomElement = typeof element.type === 'string' && element.type.toLowerCase() === element.type;
+    let isDomElement = typeof element.type === 'string';
 
     if (props)
       element = cloneElement(element, props)
 
     if (isDomElement)
-      return eQuery(element)
+      return $(element)
 
     if (!this.renderer)
       this.renderer = ReactTestUtils.createRenderer()
-    else {
-      warning(renderWarned,
-        'Calling `shallowRender` to update a collection is deprecated, use `update()` instead')
-      renderWarned = true;
-    }
 
-    this.renderer.render(element);
+    this.renderer.render(element, context);
 
-    element = this.renderer.getRenderOutput();
+    let collection = $(this.renderer.getRenderOutput());
 
-    return eQuery(element, element, this.renderer);
+    collection._renderer = this.renderer;
+
+    return collection;
   },
 
   update() {
@@ -107,29 +90,13 @@ Object.assign(eQuery.fn, {
     return this
   },
 
-  children(selector) {
-    return this
-      .reduce((result, element) => result.concat(element.props.children || []), [])
-      .filter(selector)
-  },
-
-  text() {
-    let isText = el => typeof el === 'string';
-
-    return this.get().reduce((str, element)=> {
-      return str + utils.traverse(element, isText).join('')
-    }, '')
-  },
-
   prop(key) {
     return key ? this[0].props[key] : this[0].props;
   },
 
   state(key) {
     assertRoot(this, 'Only "root" rendered elements can have state')
-
     let state = this._instance().state;
-
     return key && state ? state[key] : state
   },
 
@@ -147,4 +114,5 @@ Object.assign(eQuery.fn, {
 
 })
 
-export default eQuery;
+
+export default $;

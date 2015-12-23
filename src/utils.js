@@ -14,6 +14,11 @@ import { findAll as elementTraverse } from 'bill/element-selector';
 
 export let isDOMComponent = ReactTestUtils.isDOMComponent;
 
+export function attachToInstance(inst, publicNodes) {
+  inst.length = publicNodes.length;
+  publicNodes.forEach((pn, idx) => inst[idx] = pn)
+}
+
 export function isCompositeComponent(inst) {
   if (ReactTestUtils.isDOMComponent(inst)) {
     // Accessing inst.setState warns; just return false as that'll be what
@@ -23,22 +28,31 @@ export function isCompositeComponent(inst) {
   return inst === null || typeof inst.render === 'function' && typeof inst.setState === 'function';
 }
 
-export function getInstances(component){
-  let _public = component
-    , _private = getInternalInstance(component);
+export function getPublicInstances(nodes) {
+  let isInstanceTree = false;
+  return nodes.map(node => {
+    let privInst = node.privateInstance;
 
-  if (component.getPublicInstance) {
-    _public = component.getPublicInstance();
+    if (isInstanceTree && !privInst && React.isValidElement(node.element))
+      throw new Error('Polymorphic collections are not allowed')
+    isInstanceTree = !!privInst
+    return getPublicInstance(node)
+  })
+}
 
-    //stateless
-    if (_public === null)
-      _public = ReactDOM.findDOMNode(_private._instance)
-  }
-  // if this a root Stateless component
-  else if (component.__isStatelessWrapper)
-    _public = ReactDOM.findDOMNode(component)
+export function getPublicInstance(node) {
+  let privInst = node.privateInstance
+    , inst = node.instance;
 
-  return { private: _private, public: _public }
+  if (!privInst)
+    inst = node.element
+  else if (privInst.getPublicInstance && privInst.getPublicInstance() === null)
+    inst = ReactDOM.findDOMNode(privInst._instance)
+
+  else if (inst && inst.__isStatelessWrapper)
+    inst = ReactDOM.findDOMNode(inst)
+
+  return inst
 }
 
 export function getInternalInstance(component){

@@ -52,7 +52,7 @@
     "webpack": "^1.12.2"
   },
   "dependencies": {
-    "bill": "^1.5.0",
+    "bill": "^2.0.0",
     "dom-helpers": "^2.4.0",
     "lodash": "^3.10.1",
     "react-addons-test-utils": "^0.14.0-rc1",

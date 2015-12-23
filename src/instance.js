@@ -5,27 +5,16 @@ import ReactInstanceMap from 'react/lib/ReactInstanceMap';
 import ReactTestUtils from'react-addons-test-utils';
 
 import closest from 'dom-helpers/query/closest';
-import createQueryCollection from './QueryCollection';
+import createCollection from './QueryCollection';
 import * as utils from './utils';
 import selector from 'bill';
 
-let $ = createQueryCollection(utils.match, selector, function init(components, context, mount){
-  let first = components[0]
+let $ = createCollection(function (element, lastCollection) {
+  let first = this.nodes[0]
 
-  mount = mount || (context && context._mountPoint) || utils.getMountPoint(first);
-
-  this.context = (context && context.context)
-              || context
-              || utils.getInternalInstance(utils.getRootInstance(mount))
-
-  this._mountPoint = mount;
-  this._privateInstances = Object.create(null)
-
-  return components.map((component, idx) => {
-    let instances = utils.getInstances(component);
-    this._privateInstances[idx] = instances.private
-    return instances.public
-  })
+  if (!lastCollection) {
+    this._mountPoint = utils.getMountPoint(first.instance)
+  }
 })
 
 Object.assign($, {
@@ -36,18 +25,13 @@ Object.assign($, {
 
 Object.assign($.fn, {
 
-  _subjects(){
-    return [].map.call(this,
-      (_, idx) => this._privateInstances[idx])
-  },
-
   _reduce(cb, initial){
-    return $(this._subjects().reduce(cb, initial), this)
+    return $(this.nodes.reduce(cb, initial), this)
   },
 
   unmount() {
     let inBody = this._mountPoint.parentNode
-      , nextContext = this.context._currentElement;
+      , nextContext = this.context.nodes[0].element;
 
     ReactDOM.unmountComponentAtNode(this._mountPoint)
 
@@ -63,49 +47,28 @@ Object.assign($.fn, {
     return unwrap(this._map($.dom))
   },
 
-  element() {
-    return eQuery(this._subjects().map(
-      inst => React.cloneElement(inst._currentElement)))
-  },
-
   prop(key, value, cb) {
     if (typeof key === 'string') {
       if (arguments.length === 1)
-        return this._privateInstances[0].props[key];
+        return this.nodes[0].element.props[key];
       else
         key = { [key]: value }
     }
 
-    this._subjects(inst => {
-      ReactUpdateQueue.enqueueSetPropsInternal(inst, props)
-      if (cb)
-        ReactUpdateQueue.enqueueCallbackInternal(inst, cb)
-    })
+    // this.node(inst => {
+    //   ReactUpdateQueue.enqueueSetPropsInternal(inst, props)
+    //   if (cb)
+    //     ReactUpdateQueue.enqueueCallbackInternal(inst, cb)
+    // })
   },
 
-  state(key) {
-    return this._privateInstances[0].state[key];
-  },
-
-  context(key) {
-    return this._privateInstances[0].context[key];
-  },
-
-  text(){
-    let isText = el => typeof el === 'string';
-
-    return this._subjects().reduce((str, element)=> {
-      return str + utils.traverse(element, isText)
-        .map(inst => inst._currentElement || inst)
-        .join('')
-    }, '')
-  },
-
-  children(selector) {
-    return this
-      ._reduce((result, inst) => result.concat(utils.getInstanceChildren(inst)), [])
-      .filter(selector)
-  },
+  // state(key) {
+  //   return this._privateInstances[0].state[key];
+  // },
+  //
+  // context(key) {
+  //   return this._privateInstances[0].context[key];
+  // },
 
   trigger(event, data) {
     data = data || {}
