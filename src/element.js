@@ -6,10 +6,25 @@ import createQueryCollection from './QueryCollection';
 import iQuery from './instance'
 import * as utils from './utils';
 import { selector } from 'bill';
+import { createNode } from 'bill/node';
+import invariant from 'invariant';
 
-function assertRoot(inst, msg) {
-  if (inst.context && inst.context !== inst)
-    throw new Error(msg || 'You can only preform this action on "root" element.')
+let {
+    assertLength, assertRoot, assertStateful
+  , render, attachElementsToCollection } = utils;
+
+let createCallback = (collection, fn) => ()=> fn.call(collection, collection)
+
+function getShallowInstance(renderer) {
+  return renderer && renderer._instance._instance;
+}
+
+function getShallowTreeWithRoot(renderer) {
+  let children = renderer.getRenderOutput()
+    , instance = getShallowInstance(renderer)
+    , element = createNode(instance).element;
+
+  return React.cloneElement(element, { children })
 }
 
 function spyOnUpdate(inst, fn) {
@@ -22,39 +37,43 @@ function spyOnUpdate(inst, fn) {
   }
 }
 
-
-
 let $ = createQueryCollection(function (elements, lastCollection) {
-  if (lastCollection && lastCollection.renderer) {
-    this.context = this;
-    this._renderer = renderer; // different name to protect back compat
-    spyOnUpdate(this._instance(), ()=> this.update())
+  if (lastCollection) {
+    this._rendered = lastCollection._rendered
   }
 })
-
-$.instance = iQuery
 
 Object.assign($.fn, {
 
   _instance() {
-    return this._renderer && this._renderer._instance._instance;
+    return getShallowInstance(this._renderer);
   },
 
-  render(intoDocument, mountPoint) {
+  render(intoDocument, mountPoint, context) {
+    if (arguments.length && typeof intoDocument !== 'boolean') {
+      context = mountPoint
+      mountPoint = intoDocument
+      intoDocument = false
+    }
+
+    if (mountPoint && !(mountPoint instanceof HTMLElement)) {
+      context = mountPoint
+      mountPoint = null
+    }
+
     var mount = mountPoint || document.createElement('div')
-      , element = this[0];
+      , element = assertLength(this, 'render')[0];
 
     if (intoDocument)
       document.body.appendChild(mount)
 
-    let instance = ReactDOM.render(element, mount);
+    let { instance, wrapper } = render(element, mount, null, context)
 
-    if (instance === null) {
-      instance = ReactDOM.render(utils.wrapStateless(element), mount)
-      instance = utils.getInternalInstance(instance)
-    }
+    let collection = iQuery(instance);
 
-    return iQuery(instance);
+    collection._mountPoint = mount
+    collection._rootWrapper = wrapper;
+    return collection;
   },
 
   shallowRender(props, context) {
@@ -69,35 +88,107 @@ Object.assign($.fn, {
     if (isDomElement)
       return $(element)
 
-    if (!this.renderer)
-      this.renderer = ReactTestUtils.createRenderer()
+    let renderer = ReactTestUtils.createRenderer()
 
-    this.renderer.render(element, context);
+    renderer.render(element, context);
 
-    let collection = $(this.renderer.getRenderOutput());
+    let collection = $(getShallowTreeWithRoot(renderer));
 
-    collection._renderer = this.renderer;
+    collection._rendered = true;
+    collection._renderer = renderer;
+
+    spyOnUpdate(collection._instance(), ()=> collection.update())
 
     return collection;
   },
 
   update() {
+    assertRoot(this)
     if (!this._renderer)
       throw new Error('You can only preform this action on a "root" element.')
 
-    this.context =
-      this[0] = this._renderer.getRenderOutput()
+    attachElementsToCollection(this, getShallowTreeWithRoot(this._renderer))
     return this
   },
 
-  prop(key) {
-    return key ? this[0].props[key] : this[0].props;
+  props(...args) {
+    let value = utils.collectArgs(...args)
+    let node = assertLength(this, 'props').nodes[0]
+
+    if (args.length === 0 || (typeof value === 'string' && args.length === 1)) {
+      let element = node.element
+      return value ? element.props[value] : element.props
+    }
+
+    if (this._rendered) {
+      assertRoot(this, 'changing the props on a shallow rendered child is an anti-pattern, ' +
+       'since the elements props will be overridden by its parent in the next update() of the root element')
+
+      this._renderer.render(React.cloneElement(this[0], value));
+      attachElementsToCollection(this, getShallowTreeWithRoot(this._renderer))
+      return this
+    }
+
+    return this.map(el => React.isValidElement(el)
+      ? React.cloneElement(el, value) : el)
   },
 
-  state(key) {
-    assertRoot(this, 'Only "root" rendered elements can have state')
-    let state = this._instance().state;
-    return key && state ? state[key] : state
+  state(...args) {
+    let value = utils.collectArgs(...args)
+      , callback = args[2] || args[1];
+
+    assertLength(this, 'state')
+    assertStateful(this.nodes[0])
+
+    invariant(this._rendered,
+      'Only rendered trees can be stateful; ' +
+      'use either `shallowRender` or `render` first before inspecting or setting state.'
+    )
+
+    assertRoot(this,
+      'Only the root component of shallowly rendered tree is instantiated; ' +
+      'children elements are stateless so inspecting or setting state on them does\'t make sense ' +
+      'use DOM rendering to verifying child state, or select and shallowRender the child itself.'
+    )
+
+    if (args.length === 0 || (typeof value === 'string' && args.length === 1)) {
+      let key = value
+        , state = this._instance().state;
+
+      return key && state ? state[key] : state
+    }
+
+    callback = typeof callback === 'function'
+      ? createCallback(this, callback) : undefined
+
+    this._instance().setState(value, callback)
+
+    return this
+  },
+
+  context(...args) {
+    let value = utils.collectArgs(...args)
+    let inst = assertLength(this, 'context')._instance()
+    let context = inst.context
+
+    invariant(this._rendered,
+      'Only rendered trees can pass context; ' +
+      'use either `shallowRender` or `render` first before inspecting or setting context.'
+    )
+
+    assertRoot(this,
+      'Only the root component of a shallowly rendered tree is instantiated; ' +
+      'The children are jsut plain elements and are not passed context.'
+    )
+
+    if (args.length === 0 || (typeof value === 'string' && args.length === 1)) {
+      return value && context ? context[value] : context
+    }
+
+    this._renderer.render(this[0], { ...context, ...value });
+    attachElementsToCollection(this, getShallowTreeWithRoot(this._renderer))
+
+    return this
   },
 
   trigger(event, ...args) {
@@ -107,8 +198,6 @@ Object.assign($.fn, {
     return this.each(component => {
       component.props[event]
         && component.props[event](...args)
-
-      this._root && this._root.update()
     });
   }
 

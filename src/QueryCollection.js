@@ -1,7 +1,10 @@
-import common from './common';
-import { createNode } from 'bill/node';
+
 import { selector } from 'bill';
-import { match, getPublicInstances } from './utils';
+import {
+    isQueryCollection, getPublicInstances
+  , unwrapAndCreateNode, attachElementsToCollection } from './utils';
+
+import common from './common';
 
 export default function createCollection(ctor) {
   let $ = QueryCollection
@@ -12,35 +15,26 @@ export default function createCollection(ctor) {
 
     let elements = element == null ? [] : [].concat(element);
 
-    if (element && $.isQueryCollection(element)) {
+    if (element && isQueryCollection(element)) {
       return new element.constructor(element.get(), element)
     }
 
     this._isQueryCollection = true
-    this.context = lastCollection || this
-    this.nodes = elements.map(el => createNode(el))
-    this.length = elements.length
+    this.root = lastCollection || this
 
-    getPublicInstances(this.nodes)
-      .forEach((el, idx)=> this[idx] = el)
+    attachElementsToCollection(this, elements)
 
-    return ctor.call(this, element, lastCollection)
+    return ctor.call(this, elements, lastCollection)
   }
 
-  Object.assign($, {
-    match,
-    selector,
-    s: selector,
-    isQueryCollection(inst) {
-      return !!inst._isQueryCollection
-    }
+  $.fn = $.prototype = Object.create(common)
+
+  Object.defineProperty($.prototype, 'constructor', {
+    value: $,
+    enumerable: false,
+    writable: true,
+    configurable: true
   })
-
-  $.fn = $.prototype = {
-    constructor: $,
-  }
-
-  common($)
 
   return $
 }

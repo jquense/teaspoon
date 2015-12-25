@@ -2,7 +2,7 @@ import React, { cloneElement } from 'react';
 import $ from '../src/element';
 
 
-describe.only('shallow rendering', ()=> {
+describe('shallow rendering specific', ()=> {
   let counterRef, StatefulExample, updateSpy;
 
   beforeEach(() => {
@@ -18,7 +18,10 @@ describe.only('shallow rendering', ()=> {
       render() {
         return (
           <div>
-            <span onClick={this.increment} />
+            {this.props.name || 'folk'}
+            <span onClick={this.increment}>
+              {this.state.count}
+            </span>
           </div>
         )
       }
@@ -29,65 +32,91 @@ describe.only('shallow rendering', ()=> {
   it('should not try to render primitives', ()=>{
     let el = <div/>
 
-    $(el).shallowRender().context[0].should.equal(el)
+    $(el).shallowRender().unwrap().should.equal(el)
   })
 
   it('should render Composite Components', ()=>{
     let el = <div/>
-      , Element = ()=> el;
+      , Example = ()=> el
+      , element = <Example/>;
 
-    $(<Element/>).shallowRender().unwrap().should.equal(el)
+    let inst = $(element).shallowRender();
+    inst.unwrap().should.not.equal(element)
+    inst.unwrap().type.should.equal(Example)
   })
 
   it('should filter out invalid Elements', ()=>{
-    let instance = $(
-        <ul>
-          { false }
-          { null}
-          {'text'}
-          <li>hi 1</li>
-          <li>hi 2</li>
-          <li>hi 3</li>
-        </ul>
+    let instance = $([
+        false,
+        null,
+        'text',
+        <li>hi 1</li>,
+        <li>hi 2</li>,
+        <li>hi 3</li>,
+      ])
+
+    // breaking? 3 -> 4
+    instance.length.should.equal(4)
+  })
+
+
+  it('prop() should throw when updating a non-root rendered collection', ()=> {
+    ;(() => $(<StatefulExample />).shallowRender().find('span').props({ name: 'Steven' }))
+      .should.throw(
+        'changing the props on a shallow rendered child is an anti-pattern, ' +
+        'since the elements props will be overridden by its parent in the next update() of the root element'
       )
-
-    instance.children().length.should.equal(3)
-    instance.shallowRender().length.should.equal(3)
   })
 
-  it('should maintain state between renders', ()=>{
-    let counter = $(<StatefulExample/>)
-
-    counter.shallowRender().state('count').should.equal(0)
-    counterRef.increment()
-    counter.shallowRender().state('count').should.equal(1)
-  })
-
-  it('should update', ()=> {
+  it('should update when a root update occurs', ()=> {
     let counter = $(<StatefulExample/>).shallowRender()
 
     counter.state('count').should.equal(0)
+    counter.find('span').text().should.equal('0')
+
     counterRef.increment()
+
     updateSpy.should.have.been.calledOnce
     counter.state('count').should.equal(1)
+    counter.find('span').text().should.equal('1')
   })
 
-  it('should throw when updating none root elements', ()=> {
+  it('should throw when updating non-root elements', ()=> {
     let counter = $(<StatefulExample/>).shallowRender()
 
     ;(() => counter.find('span').update())
       .should.throw('You can only preform this action on a "root" element.')
   })
 
-  it('should update root collections', ()=> {
+  it('should update root when props or state are changed', ()=> {
+    let inst = $(<StatefulExample />).shallowRender();
+
+    inst
+      .props({ name: 'The boy' })
+      .tap(inst =>
+        inst.find('div > :first-child').unwrap().should.equal('The boy'))
+      .state({ count: 40 })
+      .find('span').text().should.equal('40')
+
+    updateSpy.should.have.been.calledOnce
+  })
+
+  it('trigger() should update root collections', ()=> {
     let inst = $(<StatefulExample />).shallowRender();
 
     inst
       .find('span')
       .trigger('click')
-      .context
-        .state('count').should.equal(1)
+      .root
+        .tap(inst =>
+          inst.find('span').text().should.equal('1'))
+        .state('count').should.equal(
+          inst.state('count')
+        )
 
     updateSpy.should.have.been.calledOnce
   })
+
+
+
 })

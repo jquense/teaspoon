@@ -9,66 +9,105 @@ import createCollection from './QueryCollection';
 import * as utils from './utils';
 import selector from 'bill';
 
+let { assertLength, assertRoot, assertStateful, collectArgs } = utils;
+
+let createCallback = (collection, fn) => ()=> fn.call(collection, collection)
+
+function getSetterMethod(key){
+  return function (...args) {
+    let value = collectArgs(...args)
+    let node = assertLength(this, key).nodes[0]
+    let data = node.instance && node.instance[key]
+
+    if (args.length === 0 || (typeof value === 'string' && args.length === 1)) {
+      if (!data)
+        data = node.privateInstance._currentElement[key];
+
+      return value && data ? data[value] : data
+    }
+
+    if (key === 'props')
+      utils.render(this, value)
+    else if (key === 'context')
+      utils.render(this, null, { ...data, ...value })
+    else throw new Error('invalid key: ' + key)
+
+    return this
+  }
+}
+
 let $ = createCollection(function (element, lastCollection) {
   let first = this.nodes[0]
 
   if (!lastCollection) {
-    this._mountPoint = utils.getMountPoint(first.instance)
+    try {
+      // no idea if I can do this in 0.15
+      this._mountPoint = utils.getMountPoint(first.instance)
+    }
+    catch (err) {}
   }
-})
-
-Object.assign($, {
-  dom(component){
-    return utils.findDOMNode(component)
-  }
+  else
+    this._mountPoint = lastCollection._mountPoint
 })
 
 Object.assign($.fn, {
 
-  _reduce(cb, initial){
-    return $(this.nodes.reduce(cb, initial), this)
+  render(...args) {
+    let collection = new ElementCollection(this.elements()[0])
+
+    return collection.render(...args)
+  },
+
+  shallowRender(...args) {
+    let collection = new ElementCollection(this.elements()[0])
+
+    return collection.shallowRender(...args)
   },
 
   unmount() {
     let inBody = this._mountPoint.parentNode
-      , nextContext = this.context.nodes[0].element;
+      , nextContext = this.root.nodes[0].element;
 
     ReactDOM.unmountComponentAtNode(this._mountPoint)
 
     if (inBody)
       document.body.removeChild(this._mountPoint)
 
-    this.context = null
+    this.root = null
 
-    return eQuery(nextContext)
+    return ElementCollection(nextContext)
   },
 
   dom() {
-    return unwrap(this._map($.dom))
+    return unwrap(this._map(utils.findDOMNode))
   },
 
-  prop(key, value, cb) {
-    if (typeof key === 'string') {
-      if (arguments.length === 1)
-        return this.nodes[0].element.props[key];
-      else
-        key = { [key]: value }
+  props: getSetterMethod('props'),
+
+  context: getSetterMethod('context'),
+
+  state(...args) {
+    let value = collectArgs(...args)
+      , callback = args[2] || args[1]
+
+    let node = assertStateful(
+      assertLength(this, 'state').nodes[0]
+    )
+
+    if (args.length === 0 || (typeof value === 'string' && args.length === 1)) {
+      let key = value
+        , state = node.instance.state;
+
+      return key && state ? state[key] : state
     }
 
-    // this.node(inst => {
-    //   ReactUpdateQueue.enqueueSetPropsInternal(inst, props)
-    //   if (cb)
-    //     ReactUpdateQueue.enqueueCallbackInternal(inst, cb)
-    // })
-  },
+    callback = typeof callback === 'function'
+      ? createCallback(this, callback) : undefined
 
-  // state(key) {
-  //   return this._privateInstances[0].state[key];
-  // },
-  //
-  // context(key) {
-  //   return this._privateInstances[0].context[key];
-  // },
+    node.instance.setState(value, callback)
+
+    return this
+  },
 
   trigger(event, data) {
     data = data || {}
@@ -80,7 +119,7 @@ Object.assign($.fn, {
       throw new TypeError( '"' + event + '" is not a supported DOM event')
 
     return this.each(component =>
-      ReactTestUtils.Simulate[event]($.dom(component), data))
+      ReactTestUtils.Simulate[event](utils.findDOMNode(component), data))
   }
 })
 
@@ -90,4 +129,4 @@ function unwrap(arr){
 
 export default $;
 
-import eQuery from './element';
+import ElementCollection from './element';

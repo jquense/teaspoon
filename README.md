@@ -1,17 +1,82 @@
+
 teaspoon
 ========
 
-A jQuery like API for querying React elements and rendered components.
+Just the right amount of abstraction for writing clear, and concise React component tests.
 
-## API
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-Like jQuery the exported function creates a collection of nodes, except in this case you select React elements instead
-of DOM nodes.
+- [Getting Started](#getting-started)
+  - [Using selectors](#using-selectors)
+  - [Complex selectors](#complex-selectors)
+- [Testing patterns](#testing-patterns)
+  - [Using `tap()`](#using-tap)
+  - [Test specific querying ("ref" style querying).](#test-specific-querying-ref-style-querying)
+- [Adding collection methods and pseudo selectors](#adding-collection-methods-and-pseudo-selectors)
+- [API](#api)
+  - [Rendering](#rendering)
+      - [`$.fn.render([Bool renderIntoDocument, HTMLElement mountPoint, Object context ])`](#fnrenderbool-renderintodocument-htmlelement-mountpoint-object-context-)
+      - [`$.fn.shallowRender([props]) -> ElementCollection`](#fnshallowrenderprops---elementcollection)
+      - [`$.element.fn.update()`](#elementfnupdate)
+      - [`$.instance.fn.unmount()`](#instancefnunmount)
+  - [Utility methods and properties](#utility-methods-and-properties)
+      - [`$.selector` -> selector _(alias: $.s)_](#selector---selector-_alias-s_)
+      - [`$.dom -> HTMLElement`](#dom---htmlelement)
+      - [`$.fn.length`](#fnlength)
+      - [`$.fn.unwrap()`](#fnunwrap)
+      - [`$.fn.get() -> Array` (alias: toArray())](#fnget---array-alias-toarray)
+      - [`$.fn.tap() -> function(Collection)`](#fntap---functioncollection)
+      - [`$.fn.each(Function iteratorFn)`](#fneachfunction-iteratorfn)
+      - [`$.fn.map(Function iteratorFn)`](#fnmapfunction-iteratorfn)
+      - [`$.fn.reduce(Function iteratorFn, [initialValue]) -> Collection`](#fnreducefunction-iteratorfn-initialvalue---collection)
+      - [`$.fn.reduceRight(Function iteratorFn) -> Collection`](#fnreducerightfunction-iteratorfn---collection)
+      - [`$.fn.some(Function iteratorFn) -> bool`](#fnsomefunction-iteratorfn---bool)
+      - [`$.fn.every(Function iteratorFn) -> bool`](#fneveryfunction-iteratorfn---bool)
+      - [`$.instance.fn.dom -> HTMLElement`](#instancefndom---htmlelement)
+  - [Accessors](#accessors)
+      - [`$.fn.prop`](#fnprop)
+      - [`$.fn.state`](#fnstate)
+      - [`$.fn.context`](#fncontext)
+  - [Traversal methods](#traversal-methods)
+      - [`$.fn.find(selector)`](#fnfindselector)
+      - [`$.fn.filter(selector)`](#fnfilterselector)
+      - [`$.fn.is(selector) -> Bool`](#fnisselector---bool)
+      - [`$.fn.children([selector])`](#fnchildrenselector)
+      - [`$.fn.parent([selector])`](#fnparentselector)
+      - [`$.fn.parents([selector])`](#fnparentsselector)
+      - [`$.fn.closest([selector])`](#fnclosestselector)
+      - [`$.fn.first([selector])`](#fnfirstselector)
+      - [`$.fn.last([selector])`](#fnlastselector)
+      - [`$.fn.only()`](#fnonly)
+      - [`$.fn.single(selector)`](#fnsingleselector)
+      - [`$.fn.text()`](#fntext)
+  - [Events](#events)
+      - [`$.instance.fn.trigger(String eventName, [Object data])`](#instancefntriggerstring-eventname-object-data)
+      - [`$.element.fn.trigger(String eventName, [Object data])`](#elementfntriggerstring-eventname-object-data)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Getting Started
+
+To get started install teaspoon via npm:
+
+```sh
+npm i --save-dev teaspoon
+```
+
+Teaspoon is test environment agnostic, so you can (and should) bring your own test runner and frameworks.
+If you plan on doing normal component rendering (not just shallow rendering) you will also need a DOM environment,
+whether that's a browser, headless browser, or jsdom.
+
+Like jQuery teaspoon exports a function that creates a collection of nodes; except in this case
+you select React elements instead of DOM nodes.
 
 ```js
 import $ from 'teaspoon';
 
-let $div = $(<div/>);
+let $div = $(<div />);
 
 $div.length // 1
 $div[0]     // ReactElement{ type: 'div', props: {} ... }
@@ -29,66 +94,82 @@ let elements = (
   </MyComponent>
 );
 
-var $elements = $(elements);
+let $elements = $(elements);
 
 $elements.find('div.fun-div').length // 1
 $elements.find(MyInput).length // 2
 ```
 
-`teaspoon` actually supports _two_ types of collections, we've already seen Element Collections,
-but you can also work with Component _instance_ collections as well for querying rendered components.
+Along with plain ol' ReactElements you can also use teaspoon to traverse a rendered component tree.
+Teaspoon also does a bunch of work under the hood to normalize the traversal behavior of DOM components,
+Custom Components, and Stateless function Components.
 
 ```js
-let instance = ReactDOM.render(<Component/>, mountNode)
+let Greeting = props => <div>hello <strong>{props.name}</strong></div>;
+
+let instance = ReactDOM.render(<Greeting name='John' />, mountNode)
 
 let $instance = $(instance);
 
-$instance.dom() // HTMLElement
+$instance.find('strong').text() // "John"
 ```
 
-There is even a quick way to switch between them.
+That's nice but a bit verbose, luckily teaspoon lets you switch between both collection types
+(element and instance) nice and succinctly.
 
 ```js
-let elements = (
-  <MyComponent>
-    <MyInput/>
-    <MyInput/>
-    <div className='fun-div'>  
-  </MyComponent>
-);
+let Greeting = props => <div>hello <strong>{props.name}</strong></div>;
 
-var $elements = $(elements).render(); // renders `<MyComponent/>` into the DOM and returns an InstanceCollection
+// renders `<Greeting/>` into the DOM and returns an collection of instances
+let $elements = $(<Greating />).render(); /
 
-$elements.find(MyInput).dom() // HTMLElement{ tagName: 'input' ... }
+$elements.find('strong').text() // "John"
 
-$elements.unmount() // removes the mounted component and returns an ElementCollection
+$elements.unmount() // removes the mounted component and returns a collection of elements
+
+//or with shallow rendering
+$elements.shallowRender()
+  .find('strong').text() // "John"
 ```
 
 ### Using selectors
 
-The supported selector syntax is subset of standard css selectors. You can query by tag: `'div > li'` or
-by `className` with `'.my-class'`. Attribute selectors work on props: `'[show=true]'` or `'[name="my-input"]'`.
-You can even use the `has()` pseudo selector for selecting parents. You can also use two React
-specific pseudo selectors: `':dom'` and `':composite'` to select DOM and Composite Components respectively.
+The supported selector syntax is subset of standard css selectors:
 
-Unlike normal css selectors though, React Elements often have prop values, and element types that are not serializable
-to a string. What if you needed to select a `MyList` component by its "tag" or wanted to get all elements with
-a `date` prop equal to today?
+- classes: `.foo`
+- attributes: `div[propName="hi"]` or `div[boolProp]`
+- `>`: direct descendent `div > .foo`
+- `+`: adjacent sibling selector
+- `~`: general sibling selector
+- `:has()`: parent selector `div:has(a.foo)`
+- `:not()`: negation
+- `:first-child`
+- `:last-child`
+- `:text` matches "text" (renderable) nodes, which may be a non string value (like a number)
+- `:dom` matches only DOM components
+- `:composite` matches composite (user defined) components
+- `:contains(some text)` matches nodes that have a text node descendent containing the provided text
+- `:textContent(some text)` matches whose text content matches the provided text
 
-With Component names you can use function or `displayName` of the component if you trust them.
+Selector support is derived from the underlying selector engine: [bill](https://github.com/jquense/bill). New minor
+versions of bill are released independent of teaspoon, so you can always check there to see what is supported on the
+cutting edge.
 
-```js
-$(<Component>).render().find('div > List.foo')
-```
+### Complex selectors
 
-Alternatively, and more robustly, you use a [tagged template string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/template_strings#Tagged_template_strings).
+Unlike normal css selectors, React elements and components often have prop values, and component types that are
+not serializable to a string; components are often best selected by their actual class and not a name, and
+prop values can complex objects such as a `date` prop equaling `new Date()`.
+
+For components, we've already seen that you can use the function name or the `displayName`, but
+sometimes they aren't available. A less brittle approach is to select by the function _itself_. You can
+use a [tagged template string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/template_strings#Tagged_template_strings).
 via the `$.selector` (also aliased as `$.s`) function for writing complex selectors like so:
 
-```
-//select all `<MyList/>`s that are children of divs
-$.s`div > ${List}`
+```js
+$.s`div > ${Greeting}`
 
-//select components with `start` props equal to `min`
+// select components with `start` props _strictly_ equal to `min`
 let min = 10
 $.s`[start=${min}]`
 ```
@@ -96,27 +177,355 @@ $.s`[start=${min}]`
 If you don't want to use the newer syntax you can also call the `selector` function directly like:
 
 ```js
-$.s('div > ', List, '.foo') // equivalent to: $.s`div > ${List}.foo`
+$.s('div > ', Greeting, '.foo') // equivalent to: $.s`div > ${Greeting}.foo`
 ```
 
-### Common Collection methods
+Use can use these complex selectors in any place a selector is allowed:
+
+```js
+let Name = props => <strong>{props.name}</strong>;
+let Time = props => <em>{props.date.toLocaleString()}</em>
+let Greeting = props => <div>hello <Name {...props} /> its: <Time {...props} /></div>;
+
+let now = new Date();
+let $inst = $(<Greeting name='John' date={now} />);
+
+$inst
+  .render()
+  .find($.s`${Greeting} > strong`)
+  .text()
+
+$inst
+  .shallowRender()
+  .find($.s`${Time}[date=${now}]`)
+  .only()  
+```
+
+## Testing patterns
+
+As far as testing libraries go `teaspoon` has fairly few opinions about how to do stuff, so you can adapt whatever
+testing practices and patterns you like. However there are some patterns and paths that fall out naturally from
+teaspoon's API.
+
+### Using `tap()`
+
+[`tap()`](#fntap---functioncollection) provides a way to quickly step in the middle of a chain of queries and
+collections to make a quite assertion. Below we quickly make a few changes to the component props and
+check that the rendered output is what we'd expect.
+
+```js
+let Greeting = props => <div>hello <strong>{props.name}</strong></div>;
+
+$(<Greeting name='rikki-tikki-tavi'/>)
+  .tap(collection => {
+    collection
+      .first('div > :text')
+      .unwrap()
+      .should.equal('hello rikki-tikki-tavi')
+  })
+  .props('name', 'Nagaina')
+  .tap(collection => {
+    collection
+      .first('div > :text')
+      .unwrap()
+      .should.equal('hello Nagaina')
+  })
+  .unmount()
+```
+
+### Test specific querying ("ref" style querying).
+
+An age old struggle and gotcha with testing HTML output is that tests are usually not very resilient to
+DOM structure changes. You may move a save button into a (or out of) some div your test used to find the button
+breaking the test. A classic technique to avoid this is the just use css classes, however it can be hard to
+distinguish between styling classes, and testing hooks.
+
+In a React environment we can do one better, adding test specific hooks. This is a pattern taken up by libraries like
+[react-test-tree](https://github.com/QubitProducts/react-test-tree), and while `teaspoon` doesn't specifically "support"
+that style of selection, its selector engine is more than powerful enough to allow that pattern of querying.
+
+You can choose any prop name you like, but we recommend picking one that likely to collide with a
+component's "real" props. In this example lets use `_testID`
+
+```js
+let Greeting = props => <div>hello <strong _testID='name'>{props.name}</strong></div>;
+
+$(Greeting).render()
+  .prop({ name: 'Betty' })
+  .find('[_testID=name]')
+  .text()
+  .should.equal('Betty')
+```
+
+You can adapt and expand this pattern however your team likes, maybe just using the single testing prop or a suite.
+You can also add some helper methods or pseudo selectors to help codify enforce your teams testing conventions
+
+## Adding collection methods and pseudo selectors
+
+Teaspoon also allows extending itself and adding new pseudo selectors using a fairly straight forward API.
+
+To add a new method for all collection types add it to `$.fn`
+(or `$.prototype` if the jQuery convention bothers you).
+
+```js
+// Returns all DOM node descendants and filters by a selector
+$.fn.domNodes = function(selector) {
+  return this
+    .find(':dom')
+    .filter(selector)
+}
+
+// also works with shallowRender()
+$(<MyComponent />).render().domNodes('.foo')
+```
+
+If you want to make a method only available to either instance of element collections you can extend
+`$.instance.fn` or `$.element.fn` following the same pattern as above.
+
+For new pseudo selectors you can use the `registerPseudo(String name, Function test)` API which provides
+a hook into the css selector engine used by teaspoon: [bill](https://github.com/jquense/bill). Pseudo selectors _do_
+introduce a new object not extensively covered here, the `Node`. Quickly put, a Node is a light abstraction that
+encapsulates both component instances and React elements, in order to provide a common traversal API across tree types.
+You can read about them and their
+properties [here](https://github.com/jquense/bill#matchselector-elementorinstance---arraynode).
+
+```js
+$.registerPseudo('disabled', (node, innerSelector)=> {
+  let domNode = $.dom(node.instance);
+
+  // Nodes can be wrapped in a teaspoon collection
+  return $(node).is('[disabled]')
+    || (domNode && domNode.disabled)
+})
+```
+
+If you want your psuedo selector to accept something other than a _selector_ as it's inner argument
+(as in `:has('foo')`), then pass `false` as the second argument (`registerPseudo(myPseudo, false, testFunction)`).
+
+## API
+
+Teaspoon does what it can to abstract away the differences between element and instance collections into a
+common API, however everything doesn't coalesce nicely, so some methods are only relevant and available for
+collections of instances and some for collections of elements.
+
+Methods that are common to both collections are listed as: `$.fn.methodName`
+
+Whereas methods that are specific to a collection type are
+listed as: `$.instance.fn.methodName` and `$.element.fn.methodName` respectively
+
+### Rendering
+
+##### `$.fn.render([Bool renderIntoDocument, HTMLElement mountPoint, Object context ])`
+
+Renders the first element of the Collection into the DOM using `ReactDom.render`. By default
+the component won't be added to the page `document`, you can pass `true` as the first parameter to render into the
+document.body. Additional you can provide your own DOM node to mount the component into.
+
+`render()` returns a new _InstanceCollection_
+
+```js
+let elements = (
+  <MyComponent>
+    <div className='fun-div'>  
+  </MyComponent>
+);
+
+let $elements = $(elements).render();
+
+// accessible by document.querySelectorAll
+$elements = $(elements).render(true);
+
+// mount the component to the <span/>
+$elements = $(elements).render(document.createElement('span'));
+```
+
+##### `$.fn.shallowRender([props]) -> ElementCollection`
+
+Use the React shallow renderer utilities to _shallowly_ render the first element of the collection.
+
+```js
+let MyComponent ()=> <div>Hi there!</div>
+
+$(<MyComponent/>)
+  .find('div')
+  .length // 0
+
+$(<MyComponent/>)
+  .shallowRender()
+  .find('div')
+  .length // 1
+```
+
+##### `$.element.fn.update()`
+
+Since shallow collections not not "live" in the same way a real rendered component tree is, you may
+need to manually update the root collection to flush changes (such as those triggered by a child component).
+
+In general you may not have to ever use `update()` since teaspoon tries to take care of all that for
+you by spying on the `componentDidUpdate` lifecycle hook of root component instance.
+
+##### `$.instance.fn.unmount()`
+
+Unmount the current tree and remove it from the DOM. `unmount()` returns an
+ElementCollection of the _root_ component element.
+
+```js
+let $inst = $(<Greeting name='John' date={now} />);
+let rendered = $inst.render();
+
+//do some stuff...then:
+rendered.umount()
+```
+
+### Utility methods and properties
 
 The methods are shared by both Element and Instance Collections.
 
-#### `$.selector` -> selector _(alias: $.s)_
+##### `$.selector` -> selector _(alias: $.s)_
 
 Selector creation function.
 
-#### `$.fn.find(selector)`
+##### `$.dom -> HTMLElement`
+
+Returns the DOM nodes for a component instance, if it exists.
+
+##### `$.fn.length`
+
+The length of the collection.
+
+##### `$.fn.unwrap()`
+
+Unwraps a collection of a single item returning the item. Equivalent to `$el[0]`; throws when there
+is more than one item in the collection.
+
+```js
+$(<div><strong>hi!</strong></div>)
+  .find('strong')
+  .unwrap() // -> <strong>hi!</strong>
+```
+
+##### `$.fn.get() -> Array` (alias: toArray())
+
+Returns a real JavaScript array of the collection items.
+
+##### `$.fn.tap() -> function(Collection)`
+
+Run an arbitrary function against the collection, helpful for making assertions while chaining.
+
+```js
+$(<MyComponent/>).render()
+  .prop({ name: 'John '})
+  .tap(collection =>
+    expect(collection.children().length).to.equal(2))
+  .find('.foo')
+```
+
+##### `$.fn.each(Function iteratorFn)`
+
+An analog to `Array.prototype.forEach`; iterates over the collection calling the `iteratorFn`
+with each item, index, and collection.
+
+```js
+$(<MyComponent/>).render()
+  .find('div')
+  .each((node, index, collection)=>{
+    //do something
+  })
+```
+
+##### `$.fn.map(Function iteratorFn)`
+
+An analog to `Array.prototype..map`; maps over the collection calling the `iteratorFn`
+with each item, index, and collection.
+
+```js
+$(<MyComponent/>).render()
+  .find('div')
+  .map((node, index, collection) => {
+    //do something
+  })
+```
+
+##### `$.fn.reduce(Function iteratorFn, [initialValue]) -> Collection`
+
+An analog to `Array.prototype..reduce`, returns a new _reduced_ teaspoon Collection
+
+```js
+$(<MyComponent/>).render()
+  .find('div')
+  .reduce((current, node, index, collection)=>{
+    return current + ', ' + node.textContent
+  }, '')
+```
+
+##### `$.fn.reduceRight(Function iteratorFn) -> Collection`
+
+An analog to `Array.prototype.reduceRight`.
+
+##### `$.fn.some(Function iteratorFn) -> bool`
+
+An analog to `Array.prototype.some`.
+
+##### `$.fn.every(Function iteratorFn) -> bool`
+
+An analog to `Array.prototype.every`.
+
+##### `$.instance.fn.dom -> HTMLElement`
+
+Returns the DOM nodes for each item in the Collection, if the exist
+
+### Accessors
+
+##### `$.fn.prop`
+
+Set or get props from a component or element.
+
+Setting props can only be down on __root__ collections given the
+reactive nature of data flow in react trees.
+
+- `.prop()`: retrieve all props
+- `.prop(propName)`: retrieve a single prop
+- `.prop(propName, propValue, [callback])`: update a single prop value
+- `.prop(newProps, [callback])`: merge `newProps` into the current set of props.
+
+##### `$.fn.state`
+
+Set or get state from a component or element. In shallowly rendered trees only the __root__ component
+can be stateful.
+
+- `.state()`: retrieve state
+- `.state(stateName)`: retrieve a single state value
+- `.state(stateName, stateValue, [callback])`: update a single state value
+- `.state(newState, [callback])`: merge `newState` into the current state.
+
+##### `$.fn.context`
+
+Set or get state from a component or element. In shallowly rendered trees only the __root__ component
+can have context.
+
+- `.context()`: retrieve context
+- `.context(String contextName)`: retrieve a single context value
+- `.context(String contextName, Any contextValue, [Function callback])`: update a single context value
+- `.context(Object newContext, [Function callback])`: replace current context.
+
+### Traversal methods
+
+##### `$.fn.find(selector)`
 
 Search all descendants of the current collection, matching against
 the provided selector.
 
 ```js
-$(<ul><li>item 1</li></ul>).find('ul > li')
+$(
+<div>
+  <ul>
+    <li>item 1</li>
+  </ul>
+</div>
+).find('ul > li')
 ```
 
-#### `$.fn.filter(selector)`
+##### `$.fn.filter(selector)`
 
 Filter the current collection matching against the provided
 selector.
@@ -131,7 +540,12 @@ let $list = $([
 $list.filter('.foo').length // 1
 ```
 
-### `$.fn.children([selector])`
+##### `$.fn.is(selector) -> Bool`
+
+Test if each item in the collection matches the provided
+selector.
+
+##### `$.fn.children([selector])`
 
 Return the children of the current selection, optionally filtered by those matching a provided selector.
 
@@ -151,24 +565,32 @@ $list.children().length // 3
 $list.children('.foo').length // 1
 ```
 
-#### `$.fn.is(selector) -> Bool`
+##### `$.fn.parent([selector])`
 
-Test if each item in the collection matches the provided
-selector.
+Get the parent of each node in the current collection, optionally filtered by a selector.
 
-#### `$.fn.first([selector])`
+##### `$.fn.parents([selector])`
+
+Get the ancestors of each node in the current collection, optionally filtered by a selector.
+
+##### `$.fn.closest([selector])`
+
+For each node in the set, get the first element that matches the selector by testing the element
+and traversing up through its ancestors.
+
+##### `$.fn.first([selector])`
 
 return the first item in a collection, alternatively search all
 collection descendants matching the provided selector and return
 the first match.
 
-#### `$.fn.last([selector])`
+##### `$.fn.last([selector])`
 
 return the last item in a collection, alternatively search all
 collection descendants matching the provided selector and return
 the last match.
 
-#### `$.fn.only()`
+##### `$.fn.only()`
 
 Assert that the current collection as only one item.
 
@@ -181,12 +603,12 @@ let $list = $(
   </ul>
 );
 
-$list.find('li').only('li') // Error! Matched more than one <li/>
+$list.find('li').only() // Error! Matched more than one <li/>
 
-$list.find('li').only('.foo').length // 1
+$list.find('li.foo').only().length // 1
 ```
 
-#### `$.fn.single(selector)`
+##### `$.fn.single(selector)`
 
 Find and assert that only item matches the provided selector.
 
@@ -204,150 +626,39 @@ $list.single('li') // Error! Matched more than one <li/>
 $list.single('.foo').length // 1
 ```
 
-#### `$.fn.unwrap()`
-
-Unwraps a collection of a single item returning the item. Equivalent to `$el[0]`; throws when there
-is more than one item in the collection.
-
-
-#### `$.fn.prop(String propName)`
-
-Return a prop value.
-
-#### `$.fn.state(String propName)`
-
-Return a state value.
-
-__remember:__ when shallow rendering, only the "root" element will possibly have state.
-
-#### `$.fn.context(String propName)`
-
-Return a context value.
-
-__remember:__ when shallow rendering, only the "root" element will possibly have context.
-
-#### `$.fn.text()`
+##### `$.fn.text()`
 
 Return the text content of the matched Collection.
 
 ```js
-$(<div>Hello <strong>John</strong></div).text() // "Hello John"
+let $els = $(<div>Hello <strong>John</strong></div)
+
+$els.text() // "Hello John"
 ```
 
-#### `$.fn.get() -> Array`
 
-Returns a real JavaScript array of the collection items.
+### Events
 
-#### `$.fn.each(Function iteratorFn)`
+Utilities for triggering and testing events on rendered and shallowly rendered components.
 
-An analog to `[].forEach`; iterates over the collection calling the `iteratorFn` with each item, idx, and collection
+##### `$.instance.fn.trigger(String eventName, [Object data])`
+
+Trigger a "synthetic" React event on the collection items. works just like `ReactTestUtils.simulate`
 
 ```js
-$(<MyComponent/>).render()
-  .find('div')
-  .each((node, index, collection)=>{
-    //do something
-  })
+  $(<Component/>).render()
+    .trigger('click', { target: { value: 'hello ' } }).
 ```
 
-#### `$.fn.reduce(Function iteratorFn, [initialValue])`
+##### `$.element.fn.trigger(String eventName, [Object data])`
 
-An analog to `[].reduce`, returns a new _reduced_ teaspoon Collection
+Simulates (poorly) event triggering for shallow collections. The method looks for a prop
+following the convention 'on[EventName]': `trigger('click')` calls `props.onClick()`, and rerenders the root collection
 
-```js
-$(<MyComponent/>).render()
-  .find('div')
-  .reduce((current, node, index, collection)=>{
-    return current + ', ' + node.textContent
-  }, '')
-```
-
-### ElementCollection API
-
-ElementCollections are created when selecting ReactElements. They
-also have all the above "common" methods
-
-#### `$(ReactElement element) -> ElementCollection`
-
-Create an ElementCollection from an Element or array of Elements.
-
-#### `$.fn.render([Bool renderIntoDocument, HTMLElement mountPoint ]) -> InstanceCollection`
-
-Renders the first element of the ElementCollection into the DOM using `ReactDom.render`. By default
-the component won't be added to the page `document`, you can pass `true` as the first parameter to render into the
-document.body. Additional you can provide your own DOM node to mount the component into.
-
-`render()` returns a new _InstanceCollection_
+Events don't bubble and don't have a proper event object.
 
 ```js
-let elements = (
-  <MyComponent>
-    <div className='fun-div'>  
-  </MyComponent>
-);
-
-var $elements = $(elements).render();
-
-$elements = $(elements).render(true); //accessible by document.querySelectorAll
-
-$elements = $(elements).render(true, document.createElement('span')); //mounts the component to the <span/>
-```
-
-#### `$.fn.shallowRender([props]) -> ElementCollection`
-
-Use the React shallow renderer utilities to _shallowly_ render the first element of the collection.
-
-```js
-let MyComponent ()=> <div>Hi there!</div>
-
-$(<MyComponent/>).find('div').length // 0
-
-$(<MyComponent/>).shallowRender().is('div') // true
-```
-### `$.fn.update()`
-
-Rerenders and updates a shallowly rendered element collection.
-
-__note:__ `.update()` must be called on a "root" collection (the result of `.shallowRender()`)
-
-#### `$.fn.trigger(String eventName, [Object data])`
-
-"trigger" an event on an element. More of convenience method than a real event trigger, since shallow rendering
-doesn't actually involve DOM event system. `trigger()` looks for a function prop of the element and calls it, it also
-updates the root collection, so that any state/context/prop changes at the top component propagate down.
-
-```js
-let root = $(<Component/>).shallowRender()
-
-root.find('button').trigger('click', {
-  target: { value: 'hello' }
-})
-```
-
-### InstanceCollection
-
-InstanceCollections are created when selecting Component instances, such as
-the result of a `ReactDOM.render()` call.
-
-The public "instances" for components differ. DOM component instances
-are the DOM nodes themselves, and Stateless Components technically don't have any
-(we use the DOM node though). One key advantage to over the normal React
-test utils is that here you can continue to chain `find` and `filter` on
-DOM and Stateless components.
-
-#### `$.fn.dom -> HTMLElement`
-
-Returns the DOM nodes for each item in the Collection, if the exist
-
-#### `$.fn.unmount -> HTMLElement`
-
-Unmount the current tree and remove it from the DOM. `unmount()` returns an
-ElementCollection of the _root_ component element.
-
-#### `$.fn.trigger(String eventName, [Object data])`
-
-Trigger a "synthetic" (React) event on the collection items.
-
-```js
-$(<Component/>).render().trigger('click', { target: { value: 'hello' } }).
+  $(<Component/>).shallowRender()
+    .find('button')
+    .trigger('click', { target: { value: 'hello ' } }).
 ```

@@ -1,6 +1,10 @@
 import React from 'react';
+import ReactTestUtils from 'react-addons-test-utils';
 import { unmountComponentAtNode, render } from 'react-dom';
 import $ from '../src';
+import ElementCollection from '../src/element';
+import InstanceCollection from '../src/instance';
+import commonPrototype from '../src/common';
 
 describe('common', ()=> {
   let Stateless = () => <strong>foo</strong>
@@ -14,19 +18,20 @@ describe('common', ()=> {
   )
 
   let Example = React.createClass({
-    // to test getters
-    getInitialState(){ return { count: 1 } },
+    contextTypes: {
+      question: React.PropTypes.string
+    },
+
+    getInitialState(){ return { greeting: 'hello there: ' } },
     render() {
       return (
-        <main>
-          <div>
-            {'hello there: ' + (this.props.name || 'person')}
-            <Stateless>
-              <strong>foo</strong>
-            </Stateless>
-            {list}
-          </div>
-        </main>
+        <div>
+          {this.state.greeting + (this.props.name || 'person') + (this.context.question || '')}
+          <Stateless>
+            <strong>foo</strong>
+          </Stateless>
+          {list}
+        </div>
       )
     }
   })
@@ -36,9 +41,50 @@ describe('common', ()=> {
     $(<div/>)[0].type.should.equal('div')
   })
 
+  it('collection types should have the same common prototype', ()=>{
+    Object.getPrototypeOf(ElementCollection.prototype)
+      .should.equal(Object.getPrototypeOf(InstanceCollection.prototype))
+      .and.equal($.prototype)
+      .and.equal(commonPrototype)
+  })
+
+  it('$ should have a reference to ElementCollection', ()=>{
+    $.element.should.equal(ElementCollection)
+  })
+
+  it('$ should have a reference to InstanceCollection', ()=>{
+    $.instance.should.equal(InstanceCollection)
+  })
+
+  it('should allow extending both collections by assigning to .fn', ()=>{
+    $.fn.type = function(){
+      return this.nodes[0].element.type
+    }
+
+    $(<div />).type()
+      .should.equal('div')
+
+    $(ReactTestUtils.renderIntoDocument(<Example />)).type()
+      .should.equal(Example)
+
+    delete $.fn.type
+  })
+
+  it('extending an single collection type should not effect the other.', ()=>{
+    $.element.fn.type = function(){
+      return this.nodes[0].element.type
+    }
+
+    $(<div />).type()
+      .should.equal('div')
+
+    expect($(ReactTestUtils.renderIntoDocument(<Example />)).type)
+      .to.not.exist
+  })
+
   it('should shallow render element', ()=> {
     let inst = $(<Example />).shallowRender()
-    inst[0].type.should.equal('main')
+    inst[0].type.should.equal(Example)
   })
 
   it('should render element', ()=> {
@@ -50,10 +96,11 @@ describe('common', ()=> {
 
   it('should render element using provided mount element', ()=> {
     let mount = document.createElement('div')
-    let instance = $(<div className='test'/>).render(false, mount)
+    let instance = $(<div className='test'/>).render(mount)
 
     mount.children[0].classList.contains('test').should.equal(true)
     instance._mountPoint.should.equal(mount)
+    document.contains(mount).should.equal(false)
   })
 
   it('should render into document', ()=> {
@@ -71,6 +118,8 @@ describe('common', ()=> {
     document.querySelectorAll('.test').length.should.equal(1)
     instance._mountPoint.should.equal(mount)
 
+    document.contains(mount).should.equal(true)
+
     unmountComponentAtNode(instance._mountPoint)
   })
 
@@ -79,27 +128,31 @@ describe('common', ()=> {
     let instanceB = $(instance);
 
     instance.should.not.equal(instanceB)
-    expect(instance.context).to.equal(instanceB.context)
+    expect(instance.root).to.equal(instanceB.root)
     expect(instance[0]).to.equal(instanceB[0])
   })
+
 
   describe(null, ()=> {
 
     let types = {
-      shallow: (elements) => $(elements).shallowRender(),
-      DOM: (elements) => $(elements).render(),
+      shallow: (elements, context) => $(elements).shallowRender(null, context),
+      DOM: (elements, context) => $(elements).render(context),
     }
 
     Object.keys(types).forEach(type => {
-      let render = types[type]
-        , isDomTest = type === 'DOM';
-
+      let render = types[type];
 
       describe(type + ' rendering', function(){
+
+        it('should maintain root elements after render', ()=>{
+          render(<Example />).is(Example)
+        })
 
         it('should work with Stateless components as root', ()=>{
           let inst = render(<Stateless />)
           inst[0].should.exist
+          inst.is(Stateless).should.equal(true)
         })
 
         it('.get()', ()=> {
@@ -119,6 +172,14 @@ describe('common', ()=> {
           expect(count).to.equal(inst.length);
         })
 
+        it('registerPseudo() should allow pseudo extensions', ()=> {
+          $.registerPseudo('foo', (node, test) => {
+            return $(node).is('.foo')
+          })
+
+          render(<Example />).find(':foo').length.should.equal(3)
+        })
+
         it('.tap()', ()=> {
           let spy = sinon.spy(function (n) { expect(n).to.exist.and.equal(this) })
             , inst = render(<Example />);
@@ -136,20 +197,116 @@ describe('common', ()=> {
            .tap(node => node.length.should.equal(3))
         })
 
-        // it('should get props', ()=>{
-        //   $(<Example name='rikki-tikki-tavi'/>)
-        //     .prop('name').should.equal('rikki-tikki-tavi')
-        //
-        //   render(<Example name='rikki-tikki-tavi'/>)
-        //     .prop('name').should.equal('rikki-tikki-tavi')
-        // })
-        //
-        // it('should get state', ()=>{
-        //   let inst = $(<Example/>)
-        //
-        //   inst.state().should.eql({ count: 1 });
-        //   inst.shallowRender().state('count').should.equal(1)
-        // })
+        it('props() should get props', ()=> {
+          // -- unrendered elements ---
+          $(<Example name='rikki-tikki-tavi'/>)
+            .props('name').should.equal('rikki-tikki-tavi')
+          $(<Example name='rikki-tikki-tavi'/>)
+            .props().name.should.equal('rikki-tikki-tavi')
+
+          // -- rendered versions ---
+          render(<Example name='rikki-tikki-tavi'/>)
+            .props('name').should.equal('rikki-tikki-tavi')
+
+          render(<Example name='rikki-tikki-tavi'/>)
+              .props().name.should.equal('rikki-tikki-tavi')
+        })
+
+        it('props() should change props', ()=> {
+
+          render(<Example name='rikki-tikki-tavi'/>)
+            .tap(inst => {
+              inst.first('div > :text').unwrap()
+                .should.equal('hello there: rikki-tikki-tavi')
+            })
+            .props('name', 'Nagaina')
+            .tap(inst =>
+              inst.first('div > :text').unwrap()
+                .should.equal('hello there: Nagaina'))
+            .props({ name: 'Nag' })
+            .tap(inst =>
+              inst.first('div > :text').unwrap()
+                .should.equal('hello there: Nag'))
+
+        })
+
+        it('props() should throw on empty collecitons', ()=> {
+          ;(() => render(<Example />).find('article').props({ name: 'Steven' }))
+            .should.throw('the method `props()` found no matching elements')
+
+          ;(() => render(<Example />).find('article').props())
+            .should.throw('the method `props()` found no matching elements')
+        })
+
+        it('state() should get component state', ()=>{
+          let inst = render(<Example/>)
+
+          inst.state().should.eql({ greeting: 'hello there: ' });
+          inst.state('greeting').should.equal('hello there: ')
+        })
+
+        it('state() should change component state', done => {
+
+          render(<Example name='John'/>)
+            .tap(inst => {
+              inst.first('div > :text').unwrap()
+                .should.equal('hello there: John')
+            })
+            .state('greeting', 'yo yo! ')
+            .tap(inst =>
+              inst.first('div > :text').unwrap()
+                .should.equal('yo yo! John'))
+            .state({ greeting: 'huzzah good sir: ' }, inst => {
+              inst.first('div > :text').unwrap()
+                .should.equal('huzzah good sir: John')
+              done()
+            })
+        })
+
+        it('state() should throw on empty collections', ()=> {
+          ;(() => render(<Example />).find('article').state({ name: 'Steven' }))
+            .should.throw('the method `state()` found no matching elements')
+
+          ;(() => render(<Example />).find('article').state())
+            .should.throw('the method `state()` found no matching elements')
+        })
+
+        it('context() should get context', ()=> {
+          let context = { question: ', who dis?'};
+
+          render(<Example />, context)
+            .context('question').should.equal(context.question)
+
+          render(<Example />, context)
+            .context().should.eql(context)
+        })
+
+        it('context() should change context', ()=> {
+
+          render(<Example />, { question: ', who dis?'})
+            .tap(inst => {
+              inst.first('div > :text').unwrap()
+                .should.equal('hello there: person, who dis?')
+            })
+            .context('question', ', how are you?')
+            .tap(inst =>
+              inst.first('div > :text').unwrap()
+                .should.equal('hello there: person, how are you?'))
+            .context({ question: ', whats the haps?' })
+            .tap(inst =>
+              inst.first('div > :text').unwrap()
+                .should.equal('hello there: person, whats the haps?'))
+
+        })
+
+        it('context() should throw on empty collections', ()=> {
+          ;(() => render(<Example />).find('article').context({ name: 'Steven' }))
+            .should.throw('the method `context()` found no matching elements')
+
+          ;(() => render(<Example />).find('article').context())
+            .should.throw('the method `context()` found no matching elements')
+        })
+
 
         it('.find() by tag or classname', ()=> {
           render(<Example />).find('li').length.should.equal(3)
@@ -165,21 +322,21 @@ describe('common', ()=> {
         })
 
         it('.find() by :dom', ()=>{
-          render(<Example />).find('main :dom').length.should.equal(6);
+          render(<Example />).find('div :dom').length.should.equal(5);
         })
 
         it('.find() should allow chaining ', (done)=> {
           render(<Example />)
             .find('ul.foo, Stateless')
-            .tap(coll => {
-              expect(coll.length).to.equal(2)
-              coll.filter('ul').length.should.equal(1)
-              coll.filter(Stateless).length.should.equal(1)
+            .tap(inst => {
+              expect(inst.length).to.equal(2)
+              inst.filter('ul').length.should.equal(1)
+              inst.filter(Stateless).length.should.equal(1)
             })
             .find('li')
-            .tap(coll => {
-              expect(coll.length).to.equal(3)
-              coll.get().every(node => $(node).is('li'))
+            .tap(inst => {
+              expect(inst.length).to.equal(3)
+              inst.get().every(node => $(node).is('li'))
               done()
             })
         })
@@ -201,7 +358,6 @@ describe('common', ()=> {
           instance.filter().should.equal(instance)
         })
 
-
         it('.children()', ()=> {
           render(<Example />)
             .find('ul')
@@ -216,7 +372,47 @@ describe('common', ()=> {
             .length.should.equal(2)
         })
 
-        it('.text() content', ()=>{
+        it('.parent()', ()=> {
+          render(<Example />)
+            .find('li')
+            .parent()
+            .tap(inst =>
+              inst.elements()[0].type.should.equal('ul')
+            )
+            .length.should.equal(1)
+        })
+
+        it('.parents()', ()=> {
+          render(<Example />)
+            .find('li')
+            .parents()
+            .tap(inst =>
+              inst.elements().map(e => e.type).should.eql(['ul', 'div', Example])
+            )
+            .length.should.equal(3)
+        })
+
+        it('.parents() with a selector', ()=> {
+          render(<Example />)
+            .find('li')
+            .parents(':dom')
+            .tap(inst =>
+              inst.elements().map(e => e.type).should.eql(['ul', 'div'])
+            )
+            .length.should.equal(2)
+        })
+
+        it('.closest()', ()=> {
+          render(<Example />)
+            .find('li')
+            .closest('div')
+            .tap(inst =>
+              inst.elements()[0].type.should.equal('div')
+            )
+            .length.should.equal(1)
+        })
+
+        it('.text()', ()=>{
           render(<Example />)
             .find(Stateless)
             .text().should.equal('foo')
@@ -224,6 +420,22 @@ describe('common', ()=> {
           render(<Example />)
             .find('ul > li')
             .text().should.equal('item 1item 2item 3')
+        })
+
+        it(':contains', ()=>{
+          render(<Example />)
+            .find(':contains(foo)')
+            .length.should.equal(3)
+        })
+
+        it(':textContent', ()=>{
+          render(<Example />)
+            .find('strong:textContent')
+            .length.should.equal(1)
+
+          render(<Example />)
+            .find(':textContent(foo)')
+            .length.should.equal(1)
         })
 
         it('.first()', ()=> {

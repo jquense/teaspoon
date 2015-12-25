@@ -6,7 +6,8 @@
   "scripts": {
     "test": "karma start --single-run",
     "tdd": "karma start",
-    "build": "babel src --out-dir lib && cpy ./README.md ./lib",
+    "toc": "doctoc README.md --github",
+    "build": "babel src --out-dir lib  && npm run toc && cpy ./README.md ./lib",
     "release": "release"
   },
   "repository": {
@@ -34,10 +35,13 @@
     "babel-plugin-object-assign": "^1.2.1",
     "chai": "^3.3.0",
     "cpy": "^3.4.1",
+    "doctoc": "^0.15.0",
+    "isparta": "^4.0.0",
     "karma": "^0.13.10",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^0.2.0",
     "karma-cli": "^0.1.0",
+    "karma-coverage": "^0.5.3",
     "karma-mocha": "^0.2.0",
     "karma-mocha-reporter": "^1.1.1",
     "karma-sinon": "^1.0.4",
@@ -52,9 +56,10 @@
     "webpack": "^1.12.2"
   },
   "dependencies": {
-    "bill": "^2.0.0",
+    "bill": "^2.0.3",
     "dom-helpers": "^2.4.0",
     "lodash": "^3.10.1",
+    "promise": "^7.1.1",
     "react-addons-test-utils": "^0.14.0-rc1",
     "warning": "^2.1.0"
   },

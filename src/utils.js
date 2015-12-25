@@ -5,18 +5,77 @@ import {
     getID, getNode, findReactContainerForID
   , getReactRootID, _instancesByReactRootID } from 'react/lib/ReactMount';
 import ReactTestUtils from'react-addons-test-utils';
+import invariant from 'invariant';
 
-import closest from 'dom-helpers/query/closest';
-import { match as _match, selector as s } from 'bill';
-
-import { findAll as instanceTraverse } from 'bill/instance-selector';
-import { findAll as elementTraverse } from 'bill/element-selector';
+import { match as _match, selector as s, compile } from 'bill';
+import { createNode, NODE_TYPES } from 'bill/node';
 
 export let isDOMComponent = ReactTestUtils.isDOMComponent;
 
-export function attachToInstance(inst, publicNodes) {
-  inst.length = publicNodes.length;
-  publicNodes.forEach((pn, idx) => inst[idx] = pn)
+export function assertLength(collection, method) {
+  invariant(!!collection.length,
+    'the method `%s()` found no matching elements', method
+  )
+  return collection
+}
+
+export function assertStateful(node) {
+  invariant(
+    node.nodeType === NODE_TYPES.COMPOSITE && !isStatelessComponent(node),
+    'You are trying to inspect or set state on a stateless component ' +
+    'such as a DOM node or functional component'
+  );
+
+  return node
+}
+export function assertRoot(collection, msg) {
+  invariant(!collection.root || collection.root === collection,
+    msg || 'You can only preform this action on a "root" element.'
+  )
+  return collection
+}
+
+export function render(element, mount, props, context) {
+  let wrapper, prevWrapper;
+
+  if (isQueryCollection(element)) {
+    let node = element.nodes[0];
+
+    assertRoot(element)
+    context = props
+    props = mount
+    mount = element._mountPoint || mount
+    prevWrapper = element._rootWrapper
+    element = node.element;
+  }
+
+  if (props)
+    element = React.cloneElement(element, props);
+
+  if (context)
+    wrapper = element = wrapElement(element, context, prevWrapper)
+
+  let instance = ReactDOM.render(element, mount);
+
+  if (instance === null) {
+    wrapper = wrapElement(element, null, prevWrapper)
+    instance = ReactDOM.render(wrapper, mount)
+  }
+
+  if (wrapper) {
+    wrapper = wrapper.type;
+  }
+
+  return { wrapper, instance };
+}
+
+export function collectArgs(key, value) {
+  if (typeof key === 'string') {
+    if (arguments.length > 1)
+      key = { [key]: value }
+  }
+
+  return key
 }
 
 export function isCompositeComponent(inst) {
@@ -28,13 +87,42 @@ export function isCompositeComponent(inst) {
   return inst === null || typeof inst.render === 'function' && typeof inst.setState === 'function';
 }
 
+
+export function isStatelessComponent(node) {
+  let privInst = node.privateInstance
+  return privInst && privInst.getPublicInstance && privInst.getPublicInstance() === null
+}
+
+export function isQueryCollection(collection) {
+  return !!(collection && collection._isQueryCollection)
+}
+
+export function unwrapAndCreateNode(subject) {
+  let node = createNode(subject)
+    , inst = node.instance
+
+  if (inst && inst.__isTspWrapper)
+    return unwrapAndCreateNode(node.children[0])
+
+  return node
+}
+
+export function attachElementsToCollection(collection, elements) {
+  collection.nodes = [].concat(elements).filter(el => !!el).map(unwrapAndCreateNode)
+  collection.length = collection.nodes.length
+
+  getPublicInstances(collection.nodes)
+    .forEach((el, idx)=> collection[idx] = el)
+}
+
 export function getPublicInstances(nodes) {
   let isInstanceTree = false;
   return nodes.map(node => {
     let privInst = node.privateInstance;
 
-    if (isInstanceTree && !privInst && React.isValidElement(node.element))
-      throw new Error('Polymorphic collections are not allowed')
+    invariant(!(isInstanceTree && !privInst && React.isValidElement(node.element)),
+      'Polymorphic collections are not allowed'
+    )
     isInstanceTree = !!privInst
     return getPublicInstance(node)
   })
@@ -46,43 +134,41 @@ export function getPublicInstance(node) {
 
   if (!privInst)
     inst = node.element
-  else if (privInst.getPublicInstance && privInst.getPublicInstance() === null)
+  else if (isStatelessComponent(node))
     inst = ReactDOM.findDOMNode(privInst._instance)
-
-  else if (inst && inst.__isStatelessWrapper)
-    inst = ReactDOM.findDOMNode(inst)
 
   return inst
 }
 
-export function getInternalInstance(component){
-  if (!component) return
-
-  if (component.getPublicInstance)
-    return component
-
-  if (component.__isStatelessWrapper)
-    return ReactInstanceMap.get(component)._renderedComponent
-
-  if (component._reactInternalComponent)
-    return component._reactInternalComponent
-
-  return ReactInstanceMap.get(component)
-}
-
-export function wrapStateless(Element){
-  class StatelessWrapper extends React.Component {
+/**
+ * Wrap an element in order to provide context or an instance in the case of
+ * stateless functional components. `prevWrapper` is necessary for
+ * rerendering a wrapped root component, recreating a wrapper each time breaks
+ * React reconciliation b/c `current.type !== prev.type`. Instead we reuse and
+ * mutate (for childContextTypes) the original component type.
+ */
+export function wrapElement(element, context, prevWrapper) {
+  let TspWrapper = prevWrapper || class extends React.Component {
     constructor(){
       super()
-      this.__isStatelessWrapper = true
+      this.__isTspWrapper = true
     }
-    render(){
-      return Element
+    getChildContext() {
+      return this.props.context
+    }
+    render() {
+      return this.props.children
     }
   }
 
-  return <StatelessWrapper />
+  if (context) {
+    TspWrapper.childContextTypes = Object.keys(context)
+      .reduce((t, k) => ({ ...t, [k]: React.PropTypes.any }), {})
+  }
+
+  return <TspWrapper context={context}>{element}</TspWrapper>
 }
+
 
 export function getMountPoint(instance){
   var id = getID(findDOMNode(instance));
@@ -98,43 +184,15 @@ export function findDOMNode(component){
     ? component
     : component && component._rootID
         ? getNode(component._rootID)
-        : ReactDOM.findDOMNode(component)
+        : component ? ReactDOM.findDOMNode(component) : null
 }
 
-export function getInstanceChildren(inst){
-  let publicInst;
+let buildSelector = sel => typeof sel === 'function' ? s`${sel}` : sel
 
-  if (!inst) return [];
-
-  if (inst.getPublicInstance)
-    publicInst = inst.getPublicInstance()
-
-  if (ReactTestUtils.isDOMComponent(publicInst)) {
-    let renderedChildren = inst._renderedChildren || {};
-
-    return Object.keys(renderedChildren)
-      .map(key => renderedChildren[key])
-      .filter(node => typeof node._currentElement !== 'string' )
-  }
-  else if (isCompositeComponent(publicInst)) {
-    let rendered = inst._renderedComponent;
-    if (rendered && typeof rendered._currentElement !== 'string')
-      return [rendered]
-  }
-
-  return []
+export function is(selector, tree, includeSelf) {
+  return !!compile(buildSelector(selector))(tree)
 }
 
-export function match(selector, tree, includeSelf){
-  if (typeof selector === 'function')
-    selector = s`${selector}`
-
-  return _match(selector, tree, includeSelf)
-}
-
-export function traverse(tree, test, includeSelf = true){
-  if (React.isValidElement(tree))
-    return elementTraverse(tree, test, includeSelf)
-
-  return instanceTraverse(tree, test, includeSelf)
+export function match(selector, tree, includeSelf) {
+  return _match(buildSelector(selector), tree, includeSelf)
 }
