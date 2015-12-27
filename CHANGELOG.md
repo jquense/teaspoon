@@ -1,3 +1,16 @@
+v6.0.0 - Sun, 27 Dec 2015 15:26:26 GMT
+--------------------------------------
+
+- [9b40e02](../../commit/9b40e02) [changed] Integrate bill@2.0.0; stabilize and consolidate APIs across collection types; tests.
+- [244d6fb](../../commit/244d6fb) [added] trigger() to element collection
+- [784f1ab](../../commit/784f1ab) [added] state(), prop(), and context() methods
+- [a9a2e50](../../commit/a9a2e50) [added] update() method for element collections
+- [bd98e44](../../commit/bd98e44) [added] tap() method
+- [a21fb8f](../../commit/a21fb8f) [fixed] default each thisArg to collection
+- [6ee61e4](../../commit/6ee61e4) [changed] pull in new bill version (more selectors!)
+
+
+
 v5.0.1 - Tue, 03 Nov 2015 18:25:54 GMT
 --------------------------------------
 
