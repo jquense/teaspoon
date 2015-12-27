@@ -192,7 +192,7 @@ function unwrap(arr){
   })
 
 let aliases = {
-  get: 'alias',
+  get: 'toArray',
   each: 'forEach'
 }
 
