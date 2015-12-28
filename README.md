@@ -219,6 +219,7 @@ check that the rendered output is what we'd expect.
 let Greeting = props => <div>hello <strong>{props.name}</strong></div>;
 
 $(<Greeting name='rikki-tikki-tavi'/>)
+  .render()
   .tap(collection => {
     collection
       .first('div > :text')
@@ -238,16 +239,16 @@ $(<Greeting name='rikki-tikki-tavi'/>)
 ### Test specific querying ("ref" style querying).
 
 An age old struggle and gotcha with testing HTML output is that tests are usually not very resilient to
-DOM structure changes. You may move a save button into a (or out of) some div your test used to find the button
+DOM structure changes. You may move a save button into a (or out of) some div your test used to find the button,
 breaking the test. A classic technique to avoid this is the just use css classes, however it can be hard to
 distinguish between styling classes, and testing hooks.
 
-In a React environment we can do one better, adding test specific hooks. This is a pattern taken up by libraries like
+In a React environment we can do one better, adding test specific attribute. This is a pattern taken up by libraries like
 [react-test-tree](https://github.com/QubitProducts/react-test-tree), and while `teaspoon` doesn't specifically "support"
 that style of selection, its selector engine is more than powerful enough to allow that pattern of querying.
 
-You can choose any prop name you like, but we recommend picking one that likely to collide with a
-component's "real" props. In this example lets use `_testID`
+You can choose any prop name you like, but we recommend picking one that isn't likely to collide with a
+component's "real" props. In this example lets use `_testID`.
 
 ```js
 let Greeting = props => <div>hello <strong _testID='name'>{props.name}</strong></div>;
@@ -260,7 +261,7 @@ $(Greeting).render()
 ```
 
 You can adapt and expand this pattern however your team likes, maybe just using the single testing prop or a suite.
-You can also add some helper methods or pseudo selectors to help codify enforce your teams testing conventions
+You can also add some helper methods or pseudo selectors to help codify enforce your teams testing conventions.
 
 ## Adding collection methods and pseudo selectors
 
@@ -321,7 +322,7 @@ listed as: `$.instance.fn.methodName` and `$.element.fn.methodName` respectively
 
 Renders the first element of the Collection into the DOM using `ReactDom.render`. By default
 the component won't be added to the page `document`, you can pass `true` as the first parameter to render into the
-document.body. Additional you can provide your own DOM node to mount the component into.
+document.body. Additionally you can provide your own DOM node to mount the component into and/or a `context` object.
 
 `render()` returns a new _InstanceCollection_
 
@@ -360,7 +361,7 @@ $(<MyComponent/>)
 
 ##### `$.element.fn.update()`
 
-Since shallow collections not not "live" in the same way a real rendered component tree is, you may
+Since shallow collections are not "live" in the same way a real rendered component tree is, you may
 need to manually update the root collection to flush changes (such as those triggered by a child component).
 
 In general you may not have to ever use `update()` since teaspoon tries to take care of all that for
@@ -376,7 +377,7 @@ let $inst = $(<Greeting name='John' date={now} />);
 let rendered = $inst.render();
 
 //do some stuff...then:
-rendered.umount()
+rendered.unmount()
 ```
 
 ### Utility methods and properties
@@ -482,8 +483,8 @@ Returns the DOM nodes for each item in the Collection, if the exist
 
 Set or get props from a component or element.
 
-Setting props can only be down on __root__ collections given the
-reactive nature of data flow in react trees.
+Setting props can only be done on __root__ collections given the
+reactive nature of data flow in react trees (or on any element of a tree that isn't rendered).
 
 - `.prop()`: retrieve all props
 - `.prop(propName)`: retrieve a single prop

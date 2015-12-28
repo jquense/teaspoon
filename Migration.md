@@ -1,10 +1,17 @@
 ## `5.0.0` -> `6.0.0`
 
-Not a lot has changed, and most breaking changes are minor and may not affect your projects.
+Not a lot has changed to the public API, but a large amount of internal refactoring did happen!
+Most breaking changes are minor and may not affect your projects.
 
-The two breaking change is are in shallowRendering, and where made to improve the API and increase consistency.
+Most breaking changes are related to shallow rendering, and were made to improve the API and increase consistency.
 
-#### Shallow Rendering maintains the root element as the rendered collection__
+#### `.context` changes
+
+While never a public api `.context` may have been used to access the root element/instance of a collection.
+in `6.0.0` context changed to `.root` and is now consistently a teaspoon collection, across collection types. It
+is still __not considered a public api__ so tread carefully.
+
+#### Shallow Rendering maintains the root element as the rendered collection
 
 ##### `5.0.0`
 
