@@ -58,6 +58,7 @@
   "dependencies": {
     "bill": "^2.0.3",
     "dom-helpers": "^2.4.0",
+    "invariant": "^2.2.0",
     "lodash": "^3.10.1",
     "promise": "^7.1.1",
     "react-addons-test-utils": "^0.14.0-rc1",
