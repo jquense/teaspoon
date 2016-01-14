@@ -38,7 +38,7 @@ __migrating? Check out the [update guide](Migration.md)__
       - [`$.fn.every(Function iteratorFn) -> bool`](#fneveryfunction-iteratorfn---bool)
       - [`$.instance.fn.dom -> HTMLElement`](#instancefndom---htmlelement)
   - [Accessors](#accessors)
-      - [`$.fn.prop`](#fnprop)
+      - [`$.fn.props`](#fnprops)
       - [`$.fn.state`](#fnstate)
       - [`$.fn.context`](#fncontext)
   - [Traversal methods](#traversal-methods)
@@ -53,6 +53,8 @@ __migrating? Check out the [update guide](Migration.md)__
       - [`$.fn.last([selector])`](#fnlastselector)
       - [`$.fn.only()`](#fnonly)
       - [`$.fn.single(selector)`](#fnsingleselector)
+      - [`$.fn.any([selector])`](#fnanyselector)
+      - [`$.fn.none([selector])`](#fnnoneselector)
       - [`$.fn.text()`](#fntext)
   - [Events](#events)
       - [`$.instance.fn.trigger(String eventName, [Object data])`](#instancefntriggerstring-eventname-object-data)
@@ -140,7 +142,7 @@ The supported selector syntax is subset of standard css selectors:
 
 - classes: `.foo`
 - attributes: `div[propName="hi"]` or `div[boolProp]`
-- `>`: direct descendent `div > .foo`
+- `>`: direct descendant `div > .foo`
 - `+`: adjacent sibling selector
 - `~`: general sibling selector
 - `:has()`: parent selector `div:has(a.foo)`
@@ -150,7 +152,7 @@ The supported selector syntax is subset of standard css selectors:
 - `:text` matches "text" (renderable) nodes, which may be a non string value (like a number)
 - `:dom` matches only DOM components
 - `:composite` matches composite (user defined) components
-- `:contains(some text)` matches nodes that have a text node descendent containing the provided text
+- `:contains(some text)` matches nodes that have a text node descendant containing the provided text
 - `:textContent(some text)` matches whose text content matches the provided text
 
 Selector support is derived from the underlying selector engine: [bill](https://github.com/jquense/bill). New minor
@@ -212,13 +214,14 @@ teaspoon's API.
 ### Using `tap()`
 
 [`tap()`](#fntap---functioncollection) provides a way to quickly step in the middle of a chain of queries and
-collections to make a quite assertion. Below we quickly make a few changes to the component props and
+collections to make a quick assertion. Below we quickly make a few changes to the component props and
 check that the rendered output is what we'd expect.
 
 ```js
 let Greeting = props => <div>hello <strong>{props.name}</strong></div>;
 
 $(<Greeting name='rikki-tikki-tavi'/>)
+  .render()
   .tap(collection => {
     collection
       .first('div > :text')
@@ -237,30 +240,30 @@ $(<Greeting name='rikki-tikki-tavi'/>)
 
 ### Test specific querying ("ref" style querying).
 
-An age old struggle and gotcha with testing HTML output is that tests are usually not very resilient to
-DOM structure changes. You may move a save button into a (or out of) some div your test used to find the button
+An age old struggle with testing HTML output is that tests are usually not very resilient to
+DOM structure changes. You may move a save button into (or out of) some div that your test used to find the button,
 breaking the test. A classic technique to avoid this is the just use css classes, however it can be hard to
 distinguish between styling classes, and testing hooks.
 
-In a React environment we can do one better, adding test specific hooks. This is a pattern taken up by libraries like
+In a React environment we can do one better, adding test specific attribute. This is a pattern taken up by libraries like
 [react-test-tree](https://github.com/QubitProducts/react-test-tree), and while `teaspoon` doesn't specifically "support"
 that style of selection, its selector engine is more than powerful enough to allow that pattern of querying.
 
-You can choose any prop name you like, but we recommend picking one that likely to collide with a
-component's "real" props. In this example lets use `_testID`
+You can choose any prop name you like, but we recommend picking one that isn't likely to collide with a
+component's "real" props. In this example let's use `_testID`.
 
 ```js
 let Greeting = props => <div>hello <strong _testID='name'>{props.name}</strong></div>;
 
-$(Greeting).render()
-  .prop({ name: 'Betty' })
+$(<Greeting name='Betty' />)
+  .render()
   .find('[_testID=name]')
   .text()
   .should.equal('Betty')
 ```
 
-You can adapt and expand this pattern however your team likes, maybe just using the single testing prop or a suite.
-You can also add some helper methods or pseudo selectors to help codify enforce your teams testing conventions
+You can adapt and expand this pattern however your team likes, maybe just using the single testing prop or a few.
+You can also add some helper methods or pseudo selectors to help codify enforce your teams testing conventions.
 
 ## Adding collection methods and pseudo selectors
 
@@ -301,7 +304,7 @@ $.registerPseudo('disabled', (node, innerSelector)=> {
 })
 ```
 
-If you want your psuedo selector to accept something other than a _selector_ as it's inner argument
+If you want your pseudo selector to accept something other than a _selector_ as it's inner argument
 (as in `:has('foo')`), then pass `false` as the second argument (`registerPseudo(myPseudo, false, testFunction)`).
 
 ## API
@@ -321,7 +324,7 @@ listed as: `$.instance.fn.methodName` and `$.element.fn.methodName` respectively
 
 Renders the first element of the Collection into the DOM using `ReactDom.render`. By default
 the component won't be added to the page `document`, you can pass `true` as the first parameter to render into the
-document.body. Additional you can provide your own DOM node to mount the component into.
+document.body. Additionally you can provide your own DOM node to mount the component into and/or a `context` object.
 
 `render()` returns a new _InstanceCollection_
 
@@ -360,11 +363,11 @@ $(<MyComponent/>)
 
 ##### `$.element.fn.update()`
 
-Since shallow collections not not "live" in the same way a real rendered component tree is, you may
+Since shallow collections are not "live" in the same way a real rendered component tree is, you may
 need to manually update the root collection to flush changes (such as those triggered by a child component).
 
 In general you may not have to ever use `update()` since teaspoon tries to take care of all that for
-you by spying on the `componentDidUpdate` lifecycle hook of root component instance.
+you by spying on the `componentDidUpdate` life-cycle hook of root component instance.
 
 ##### `$.instance.fn.unmount()`
 
@@ -376,7 +379,7 @@ let $inst = $(<Greeting name='John' date={now} />);
 let rendered = $inst.render();
 
 //do some stuff...then:
-rendered.umount()
+rendered.unmount()
 ```
 
 ### Utility methods and properties
@@ -478,17 +481,17 @@ Returns the DOM nodes for each item in the Collection, if the exist
 
 ### Accessors
 
-##### `$.fn.prop`
+##### `$.fn.props`
 
 Set or get props from a component or element.
 
-Setting props can only be down on __root__ collections given the
-reactive nature of data flow in react trees.
+Setting props can only be done on __root__ collections given the
+reactive nature of data flow in react trees (or on any element of a tree that isn't rendered).
 
-- `.prop()`: retrieve all props
-- `.prop(propName)`: retrieve a single prop
-- `.prop(propName, propValue, [callback])`: update a single prop value
-- `.prop(newProps, [callback])`: merge `newProps` into the current set of props.
+- `.props()`: retrieve all props
+- `.props(propName)`: retrieve a single prop
+- `.props(propName, propValue, [callback])`: update a single prop value
+- `.props(newProps, [callback])`: merge `newProps` into the current set of props.
 
 ##### `$.fn.state`
 
@@ -612,7 +615,7 @@ $list.find('li.foo').only().length // 1
 
 ##### `$.fn.single(selector)`
 
-Find and assert that only item matches the provided selector.
+Find assert that only item matches the provided selector.
 
 ```js
 let $list = $(
@@ -626,6 +629,44 @@ let $list = $(
 $list.single('li') // Error! Matched more than one <li/>
 
 $list.single('.foo').length // 1
+```
+
+
+##### `$.fn.any([selector])`
+
+Assert that the collection contains one or more nodes.
+Optionally search by a provided selector.
+
+```js
+let $list = $(
+  <ul>
+    <li>1</li>
+    <li className='foo'>2</li>
+    <li>3</li>
+  </ul>
+);
+
+$list.any('p')  // Error!
+
+$list.any('li').length // 3
+```
+
+##### `$.fn.none([selector])`
+
+Assert that the collection contains no nodes. Optionally search by a provided selector.
+
+```js
+let $list = $(
+  <ul>
+    <li>1</li>
+    <li className='foo'>2</li>
+    <li>3</li>
+  </ul>
+);
+
+$list.none('li')  // Error!
+
+$list.none('p').length // 0
 ```
 
 ##### `$.fn.text()`
@@ -655,7 +696,7 @@ Trigger a "synthetic" React event on the collection items. works just like `Reac
 ##### `$.element.fn.trigger(String eventName, [Object data])`
 
 Simulates (poorly) event triggering for shallow collections. The method looks for a prop
-following the convention 'on[EventName]': `trigger('click')` calls `props.onClick()`, and rerenders the root collection
+following the convention 'on[EventName]': `trigger('click')` calls `props.onClick()`, and re-renders the root collection
 
 Events don't bubble and don't have a proper event object.
 

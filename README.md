@@ -53,6 +53,8 @@ __migrating? Check out the [update guide](Migration.md)__
       - [`$.fn.last([selector])`](#fnlastselector)
       - [`$.fn.only()`](#fnonly)
       - [`$.fn.single(selector)`](#fnsingleselector)
+      - [`$.fn.any([selector])`](#fnanyselector)
+      - [`$.fn.none([selector])`](#fnnoneselector)
       - [`$.fn.text()`](#fntext)
   - [Events](#events)
       - [`$.instance.fn.trigger(String eventName, [Object data])`](#instancefntriggerstring-eventname-object-data)
