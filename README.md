@@ -38,7 +38,7 @@ __migrating? Check out the [update guide](Migration.md)__
       - [`$.fn.every(Function iteratorFn) -> bool`](#fneveryfunction-iteratorfn---bool)
       - [`$.instance.fn.dom -> HTMLElement`](#instancefndom---htmlelement)
   - [Accessors](#accessors)
-      - [`$.fn.prop`](#fnprop)
+      - [`$.fn.props`](#fnprops)
       - [`$.fn.state`](#fnstate)
       - [`$.fn.context`](#fncontext)
   - [Traversal methods](#traversal-methods)
@@ -479,17 +479,17 @@ Returns the DOM nodes for each item in the Collection, if the exist
 
 ### Accessors
 
-##### `$.fn.prop`
+##### `$.fn.props`
 
 Set or get props from a component or element.
 
 Setting props can only be done on __root__ collections given the
 reactive nature of data flow in react trees (or on any element of a tree that isn't rendered).
 
-- `.prop()`: retrieve all props
-- `.prop(propName)`: retrieve a single prop
-- `.prop(propName, propValue, [callback])`: update a single prop value
-- `.prop(newProps, [callback])`: merge `newProps` into the current set of props.
+- `.props()`: retrieve all props
+- `.props(propName)`: retrieve a single prop
+- `.props(propName, propValue, [callback])`: update a single prop value
+- `.props(newProps, [callback])`: merge `newProps` into the current set of props.
 
 ##### `$.fn.state`
 
