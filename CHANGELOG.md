@@ -1,3 +1,11 @@
+v6.1.0 - Thu, 14 Jan 2016 21:01:12 GMT
+--------------------------------------
+
+- [a2a5b48](../../commit/a2a5b48) [added] any(), and none() assert methods
+- [75a3b84](../../commit/75a3b84) [fixed] ensure stale nodes aren't left after a rerender
+
+
+
 v6.0.1 - Thu, 07 Jan 2016 02:55:38 GMT
 --------------------------------------
 
