@@ -253,8 +253,7 @@ component's "real" props. In this example lets use `_testID`.
 ```js
 let Greeting = props => <div>hello <strong _testID='name'>{props.name}</strong></div>;
 
-$(<Greeting />)
-  .props({ name: 'Betty' })
+$(<Greeting name='Betty' />)
   .render()
   .find('[_testID=name]')
   .text()
