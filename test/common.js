@@ -499,6 +499,7 @@ describe('common', ()=> {
 
         it('.single()', ()=> {
           render(<Example />).single(Stateless).length.should.equal(1)
+          render(<Example />).find(Stateless).single().length.should.equal(1)
         })
 
         it('.single() should throw more than one match is found', ()=> {
@@ -508,7 +509,27 @@ describe('common', ()=> {
 
         it('.single() should throw when nothing found', ()=> {
           ;(()=> render(<Example />)
-            .single('article')).should.throw()
+            .single('article')).should.throw(/found: 0.+not 1/)
+        })
+
+        it('.any()', ()=> {
+          render(<Example />).any(Stateless).length.should.equal(1)
+          render(<Example />).find('ul > li').any().length.should.equal(3)
+        })
+
+        it('.any() should throw if no match is found', ()=> {
+          ;(()=> render(<Example />)
+            .any('article')).should.throw(/found 0.+expected to find 1 or more/)
+        })
+
+        it('.none()', ()=> {
+          render(<Example />).none('article').length.should.equal(0)
+          render(<Example />).find('article').none().length.should.equal(0)
+        })
+
+        it('.none() should throw if a match is found', ()=> {
+          ;(()=> render(<Example />)
+            .none('li')).should.throw(/found 3.+expected to find zero/)
         })
 
         it('.unwrap()', ()=> {

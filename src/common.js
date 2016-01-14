@@ -152,12 +152,6 @@ let common = {
     return this.first()
   },
 
-  single(selector) {
-    return selector
-      ? this.find(selector).only()
-      : this.only()
-  },
-
   unwrap() {
     return this.single()[0]
   },
@@ -171,10 +165,37 @@ function unwrap(arr){
   return arr && arr.length === 1 ? arr[0] : arr
 }
 
+let asserts = {
+  none: [
+    c => c.length === 0,
+    c => `The query found ${c.length}, but expected to find zero nodes.`
+  ],
+  any: [
+    c => c.length !== 0,
+    c => `The query found ${c.length}, but expected to find 1 or more nodes.`
+  ],
+  single: [
+    c =>  c.length === 1,
+    c => `The query found: ${c.length} items not 1`
+  ]
+}
+
+Object.keys(asserts).forEach(name => {
+  let [ test, msg ] = asserts[name];
+
+  common[name] = function (selector) {
+    if (selector)
+      return this.find(selector)[name]()
+
+    invariant(test(this), msg(this))
+    return this
+  }
+})
+
 // return values
 ;['every', 'some']
   .forEach(method => {
-    let fn = [][method];
+    let fn = Array.prototype[method];
 
     common[method] = function (...args) {
       return fn.apply(this, args)
@@ -184,7 +205,7 @@ function unwrap(arr){
 // return collections
 ;['map', 'reduce', 'reduceRight']
   .forEach(method => {
-    let fn = [][method];
+    let fn = Array.prototype[method];
 
     common[method] = function (...args) {
       return $(this, fn.apply(this, args))
