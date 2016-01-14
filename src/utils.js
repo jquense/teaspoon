@@ -7,7 +7,7 @@ import {
 import ReactTestUtils from'react-addons-test-utils';
 import invariant from 'invariant';
 
-import { match as _match, selector as s, compile } from 'bill';
+import { isNode, match as _match, selector as s, compile } from 'bill';
 import { createNode, NODE_TYPES } from 'bill/node';
 
 export let isDOMComponent = ReactTestUtils.isDOMComponent;
@@ -35,22 +35,21 @@ export function assertRoot(collection, msg) {
   return collection
 }
 
-export function render(element, mount, props, context) {
+export function render(element, mount, { props, context }) {
   let wrapper, prevWrapper;
 
   if (isQueryCollection(element)) {
     let node = element.nodes[0];
 
     assertRoot(element)
-    context = props
-    props = mount
     mount = element._mountPoint || mount
     prevWrapper = element._rootWrapper
     element = node.element;
   }
 
-  if (props)
+  if (props) {
     element = React.cloneElement(element, props);
+  }
 
   if (context)
     wrapper = element = wrapElement(element, context, prevWrapper)

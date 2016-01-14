@@ -61,6 +61,8 @@ describe('DOM rendering specific', ()=> {
     expect(next[0].type).to.equal('div')
   })
 
+
+
   it('should return DOM node from Component', ()=> {
     let instance = $(<div className='test'/>).render()
 

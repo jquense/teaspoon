@@ -26,12 +26,11 @@ function getSetterMethod(key){
       return value && data ? data[value] : data
     }
 
-    if (key === 'props')
-      utils.render(this, value)
-    else if (key === 'context')
-      utils.render(this, null, { ...data, ...value })
-    else throw new Error('invalid key: ' + key)
+    let { instance } = utils.render(this, null, {
+      [key]: { ...data, ...value }
+    })
 
+    utils.attachElementsToCollection(this, instance)
     return this
   }
 }

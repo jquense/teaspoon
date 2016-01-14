@@ -67,7 +67,7 @@ Object.assign($.fn, {
     if (intoDocument)
       document.body.appendChild(mount)
 
-    let { instance, wrapper } = render(element, mount, null, context)
+    let { instance, wrapper } = render(element, mount, { context })
 
     let collection = iQuery(instance);
 

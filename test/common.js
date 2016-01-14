@@ -307,6 +307,32 @@ describe('common', ()=> {
             .should.throw('the method `context()` found no matching elements')
         })
 
+        it('should not reuse nodes on rerenders', ()=> {
+          let Component = (props) => (
+            <div>
+              { props.toggle && <span>hello</span> }
+              <p>foo</p>
+            </div>
+          )
+
+          expect(()=> {
+            render(<Component toggle/>)
+              .render()
+              .tap(s => {
+                s.is(Component)
+                s.find('span').length.should.equal(1)
+                s.find('p').length.should.equal(1)
+              })
+              .props({ toggle: false })
+              .tap(s => {
+                s.is(Component)
+                s.find('span').length.should.equal(0)
+                s.find('p').length.should.equal(1)
+              })
+          })
+          .to.not.throw()
+
+        })
 
         it('.find() by tag or classname', ()=> {
           render(<Example />).find('li').length.should.equal(3)
