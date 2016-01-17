@@ -125,7 +125,7 @@ That's nice but a bit verbose, luckily teaspoon lets you switch between both col
 let Greeting = props => <div>hello <strong>{props.name}</strong></div>;
 
 // renders `<Greeting/>` into the DOM and returns an collection of instances
-let $elements = $(<Greating />).render(); /
+let $elements = $(<Greeting />).render();
 
 $elements.find('strong').text() // "John"
 
