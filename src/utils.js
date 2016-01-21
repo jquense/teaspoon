@@ -131,6 +131,9 @@ export function getPublicInstance(node) {
   let privInst = node.privateInstance
     , inst = node.instance;
 
+  console.error('GPI: ', node, privInst, node.element)
+  console.error('GPI: ', Object.getOwnPropertyDescriptor(node, 'element').get.toString())
+
   if (!privInst)
     inst = node.element
   else if (isStatelessComponent(node))

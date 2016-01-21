@@ -36,7 +36,7 @@ describe('common', ()=> {
     }
   })
 
-  it('should create collection', ()=>{
+  it.only('should create collection', ()=>{
     $(<div/>).length.should.equal(1)
     $(<div/>)[0].type.should.equal('div')
   })
