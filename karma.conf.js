@@ -19,7 +19,10 @@ module.exports = function (config) {
 
     logLevel: config.LOG_INFO,
 
-    browsers: ['Chrome'],
+    browsers:  process.env.TRAVIS
+      ? ['ChromeTravis']
+      : ['Chrome'],
+
 
     preprocessors: {
       'webpack.tests.js': ['webpack']
@@ -34,6 +37,13 @@ module.exports = function (config) {
     webpackServer: {
       stats: { progress: true, modules: false },
       noInfo: true
+    },
+
+    customLaunchers: {
+      ChromeTravis: {
+          base: 'Chrome',
+          flags: ['--no-sandbox']
+      }
     }
 
   });
