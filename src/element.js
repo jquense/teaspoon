@@ -56,7 +56,7 @@ Object.assign($.fn, {
       intoDocument = false
     }
 
-    if (mountPoint && !(mountPoint instanceof HTMLElement)) {
+    if (mountPoint && !(mountPoint instanceof window.HTMLElement)) {
       context = mountPoint
       mountPoint = null
     }
