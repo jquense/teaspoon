@@ -1,3 +1,12 @@
+v6.1.1 - Sat, 13 Feb 2016 20:12:39 GMT
+--------------------------------------
+
+- [6d24625](../../commit/6d24625) [changed] bump bill dependency
+- [1e5bc12](../../commit/1e5bc12) [fixed] use window.HTMLElement instead of HTMLElement so we can use with jsdom
+- [3fc488d](../../commit/3fc488d) [fixed] missing dep
+
+
+
 v6.1.0 - Thu, 14 Jan 2016 21:01:12 GMT
 --------------------------------------
 
