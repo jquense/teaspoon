@@ -145,6 +145,13 @@ let common = {
       : $(this, assertLength(this, 'last')[this.length - 1], this)
   },
 
+  nth(n, selector) {
+    n = Math.max(0, Math.min(n, this.length))
+    return selector
+      ? this.find(selector).nth(n)
+      : $(this, assertLength(this, 'nth')[n], this)
+  },
+
   only() {
     if (this.length !== 1)
       throw new Error('The query found: ' + this.length + ' items not 1')

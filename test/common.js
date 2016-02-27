@@ -497,6 +497,22 @@ describe('common', ()=> {
               .should.throw('the method `last()` found no matching elements')
         })
 
+        it('.nth()', ()=> {
+          render(<Example />)
+            .nth(1, 'li')
+            .text().should.equal('item 2')
+
+          render(<Example />)
+            .find('li')
+            .nth(1)
+            .text().should.equal('item 2')
+        })
+
+        it('.nth() should throw if there are no elements', ()=> {
+          ;(() => render(<Example />).nth(0, 'article'))
+              .should.throw('the method `nth()` found no matching elements')
+        })
+
         it('.single()', ()=> {
           render(<Example />).single(Stateless).length.should.equal(1)
           render(<Example />).find(Stateless).single().length.should.equal(1)
