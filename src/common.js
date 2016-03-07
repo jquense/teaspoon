@@ -2,8 +2,8 @@ import invariant from 'invariant';
 import { findAll, registerPseudo } from 'bill';
 import { NODE_TYPES } from 'bill/node';
 import * as utils from './utils';
-import findIndex from 'lodash/array/findIndex';
-import create from 'lodash/object/create'
+import findIndex from 'lodash.findindex';
+import create from 'lodash.create'
 let { assertLength, is } = utils;
 
 function indexOfNode(arr, findNode) {

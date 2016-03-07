@@ -1,5 +1,4 @@
 {
-  "stage": 0,
-  "loose": ["all"],
-  "plugins": ["object-assign"]
+  "presets": ["react", "es2015-loose", "stage-0"],
+  "plugins": ["transform-object-assign"]
 }
