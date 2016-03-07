@@ -63,8 +63,7 @@
     "bill": "^2.2.1",
     "dom-helpers": "^2.4.0",
     "invariant": "^2.2.0",
-    "lodash.create": "^4.0.3",
-    "lodash.findindex": "^4.2.0",
+    "lodash": "^4.6.1",
     "promise": "^7.1.1",
     "react-addons-test-utils": "^0.14.0-rc1",
     "warning": "^2.1.0"
