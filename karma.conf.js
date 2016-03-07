@@ -25,10 +25,11 @@ module.exports = function (config) {
 
 
     preprocessors: {
-      'webpack.tests.js': ['webpack']
+      'webpack.tests.js': ['webpack', 'sourcemap']
     },
 
     webpack: {
+      devtool: 'inline-source-map',
       module: {
         loaders: [{ test: /\.js$/, loader: 'babel', exclude: /node_modules/ }]
       }
