@@ -1,6 +1,5 @@
-import React, { cloneElement } from 'react';
+import React from 'react';
 import $ from '../src/element';
-
 
 describe('shallow rendering specific', ()=> {
   let counterRef, StatefulExample, updateSpy;
@@ -52,7 +51,7 @@ describe('shallow rendering specific', ()=> {
         'text',
         <li>hi 1</li>,
         <li>hi 2</li>,
-        <li>hi 3</li>,
+        <li>hi 3</li>
       ])
 
     // breaking? 3 -> 4
@@ -61,7 +60,7 @@ describe('shallow rendering specific', ()=> {
 
 
   it('prop() should throw when updating a non-root rendered collection', ()=> {
-    ;(() => $(<StatefulExample />).shallowRender().find('span').props({ name: 'Steven' }))
+    (() => $(<StatefulExample />).shallowRender().find('span').props({ name: 'Steven' }))
       .should.throw(
         'changing the props on a shallow rendered child is an anti-pattern, ' +
         'since the elements props will be overridden by its parent in the next update() of the root element'

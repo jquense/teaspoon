@@ -1,17 +1,14 @@
-import React, { isValidElement, cloneElement } from 'react';
-import ReactDOM from 'react-dom';
+import React, { cloneElement } from 'react';
 import ReactTestUtils from'react-addons-test-utils';
-import warning from 'warning';
 import createQueryCollection from './QueryCollection';
 import iQuery from './instance'
-import * as utils from './utils';
-import { selector } from 'bill';
+import {
+  assertLength, assertRoot, assertStateful
+  , render, attachElementsToCollection, collectArgs
+} from './utils';
+
 import { createNode } from 'bill/node';
 import invariant from 'invariant';
-
-let {
-    assertLength, assertRoot, assertStateful
-  , render, attachElementsToCollection } = utils;
 
 let createCallback = (collection, fn) => ()=> fn.call(collection, collection)
 
@@ -112,7 +109,7 @@ Object.assign($.fn, {
   },
 
   props(...args) {
-    let value = utils.collectArgs(...args)
+    let value = collectArgs(...args)
     let node = assertLength(this, 'props').nodes[0]
 
     if (args.length === 0 || (typeof value === 'string' && args.length === 1)) {
@@ -134,7 +131,7 @@ Object.assign($.fn, {
   },
 
   state(...args) {
-    let value = utils.collectArgs(...args)
+    let value = collectArgs(...args)
       , callback = args[2] || args[1];
 
     assertLength(this, 'state')
@@ -167,7 +164,7 @@ Object.assign($.fn, {
   },
 
   context(...args) {
-    let value = utils.collectArgs(...args)
+    let value = collectArgs(...args)
     let inst = assertLength(this, 'context')._instance()
     let context = inst.context
 

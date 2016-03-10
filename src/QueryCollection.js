@@ -1,10 +1,8 @@
-
-import { selector } from 'bill';
-import {
-    isQueryCollection, getPublicInstances
-  , unwrapAndCreateNode, attachElementsToCollection } from './utils';
-
 import common from './common';
+
+import {
+    isQueryCollection
+  , attachElementsToCollection } from './utils';
 
 export default function createCollection(ctor) {
   let $ = QueryCollection

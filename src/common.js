@@ -1,24 +1,13 @@
 import invariant from 'invariant';
-import { findAll, registerPseudo } from 'bill';
+import { findAll } from 'bill';
 import { NODE_TYPES } from 'bill/node';
-import * as utils from './utils';
-import findIndex from 'lodash/array/findIndex';
-import create from 'lodash/object/create'
-let { assertLength, is } = utils;
-
-function indexOfNode(arr, findNode) {
-  return findIndex(arr, (node, i) => {
-    return node === findNode ||
-      (node.privateInstance || node.element) === (findNode.privateInstance || findNode.element)
-  })
-}
+import { assertLength, matches, qsa } from './utils';
 
 function noTextNodes(nodes) {
   return nodes.filter(node => node.nodeType !== NODE_TYPES.TEXT)
 }
 
 let $ = (t, ...args) => new t.constructor(...args)
-
 
 
 let common = {
@@ -51,7 +40,7 @@ let common = {
 
   find(selector, includeSelf = false) {
     return this._reduce((result, node) => {
-      return result.concat(utils.match(selector, node, includeSelf))
+      return result.concat(qsa(selector, node, includeSelf))
     }, [])
   },
 
@@ -65,7 +54,7 @@ let common = {
     if (!selector) return this
 
     return this._reduce((result, node) => {
-      return is(selector, node) ? result.concat(node) : result
+      return matches(selector, node) ? result.concat(node) : result
     }, [])
   },
 
@@ -85,7 +74,7 @@ let common = {
 
       if (node = node.parentNode) {
         if (selector)
-          match = is(selector, node)
+          match = matches(selector, node)
 
         if (match && nodes.indexOf(node) === -1)
           nodes.push(node)
@@ -100,7 +89,7 @@ let common = {
         let match = true;
 
         if (selector)
-          match = is(selector, node)
+          match = matches(selector, node)
 
         if (match && nodes.indexOf(node) === -1)
           nodes.push(node)
@@ -111,7 +100,7 @@ let common = {
   },
 
   closest(selector) {
-    let test = selector ? n => is(selector, n) : (() => true)
+    let test = selector ? n => matches(selector, n) : (() => true)
 
     return this._reduce((nodes, node) => {
       do {
@@ -127,8 +116,6 @@ let common = {
   },
 
   text() {
-    let isText = el => typeof el === 'string';
-
     return this.find(':text').nodes
       .reduce((str, node) => str + node.element, '')
   },
@@ -168,9 +155,6 @@ let common = {
   }
 }
 
-function unwrap(arr){
-  return arr && arr.length === 1 ? arr[0] : arr
-}
 
 let asserts = {
   none: [

@@ -1,7 +1,6 @@
 import React from 'react';
-import { unmountComponentAtNode, render } from 'react-dom';
+import { render } from 'react-dom';
 import $ from '../src';
-import * as utils from '../src/utils';
 
 describe('DOM rendering specific', ()=> {
   let Stateless = props => <div onClick={props.onClick}>{props.children}</div>
@@ -76,7 +75,7 @@ describe('DOM rendering specific', ()=> {
 
   it('should throw when retrieving state from a stateless node', ()=> {
     let msg = 'You are trying to inspect or set state on a stateless component ' +
-              'such as a DOM node or functional component';
+              'such as a DOM node or functional component'
 
     ;(() => $(<Component />).render().find('div').state())
       .should.throw(msg)

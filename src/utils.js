@@ -1,13 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import ReactInstanceMap from 'react/lib/ReactInstanceMap';
 import {
     getID, getNode, findReactContainerForID
   , getReactRootID, _instancesByReactRootID } from 'react/lib/ReactMount';
 import ReactTestUtils from'react-addons-test-utils';
 import invariant from 'invariant';
 
-import { isNode, match as _match, selector as s, compile } from 'bill';
+import bill from 'bill';
 import { createNode, NODE_TYPES } from 'bill/node';
 
 export let isDOMComponent = ReactTestUtils.isDOMComponent;
@@ -35,8 +34,11 @@ export function assertRoot(collection, msg) {
   return collection
 }
 
-export function render(element, mount, { props, context }) {
-  let wrapper, prevWrapper;
+export function render(element, mount, { props, context }, renderFn) {
+  let renderInstance
+    , wrapper, prevWrapper;
+
+  renderFn = renderFn || ReactDOM.render;
 
   if (isQueryCollection(element)) {
     let node = element.nodes[0];
@@ -51,21 +53,26 @@ export function render(element, mount, { props, context }) {
     element = React.cloneElement(element, props);
   }
 
-  if (context)
+  if (context) {
     wrapper = element = wrapElement(element, context, prevWrapper)
+    renderInstance = createNode(wrapper).instance;
+  }
 
-  let instance = ReactDOM.render(element, mount);
+  let instance = renderFn(element, mount);
 
+  if (!renderInstance)
+    renderInstance = instance
+    
   if (instance === null) {
+    renderInstance = null;
     wrapper = wrapElement(element, null, prevWrapper)
-    instance = ReactDOM.render(wrapper, mount)
+    instance = renderFn(wrapper, mount)
   }
 
-  if (wrapper) {
+  if (wrapper)
     wrapper = wrapper.type;
-  }
 
-  return { wrapper, instance };
+  return { wrapper, instance, renderInstance };
 }
 
 export function collectArgs(key, value) {
@@ -186,12 +193,12 @@ export function findDOMNode(component){
         : component ? ReactDOM.findDOMNode(component) : null
 }
 
-let buildSelector = sel => typeof sel === 'function' ? s`${sel}` : sel
+let buildSelector = sel => typeof sel === 'function' ? bill.selector`${sel}` : sel
 
-export function is(selector, tree, includeSelf) {
-  return !!compile(buildSelector(selector))(tree)
+export function matches(selector, tree) {
+  return !!bill.matches(buildSelector(selector), tree)
 }
 
-export function match(selector, tree, includeSelf) {
-  return _match(buildSelector(selector), tree, includeSelf)
+export function qsa(selector, tree, includeSelf) {
+  return bill.querySelectorAll(buildSelector(selector), tree, includeSelf)
 }

@@ -287,25 +287,36 @@ $(<MyComponent />).render().domNodes('.foo')
 If you want to make a method only available to either instance of element collections you can extend
 `$.instance.fn` or `$.element.fn` following the same pattern as above.
 
-For new pseudo selectors you can use the `registerPseudo(String name, Function test)` API which provides
+### createPseudo(pseudo: string, handler: (innerValue: string) => (node: Node) => bool)
+
+For new pseudo selectors you can use the `createPseudo` API which provides
 a hook into the css selector engine used by teaspoon: [bill](https://github.com/jquense/bill). Pseudo selectors _do_
-introduce a new object not extensively covered here, the `Node`. Quickly put, a Node is a light abstraction that
+introduce a new object not extensively covered here, the `Node`. A Node is a light abstraction that
 encapsulates both component instances and React elements, in order to provide a common traversal API across tree types.
-You can read about them and their
-properties [here](https://github.com/jquense/bill#matchselector-elementorinstance---arraynode).
+You can read about them and their properties [here](https://github.com/jquense/bill#node).
 
 ```js
-$.registerPseudo('disabled', (node, innerSelector)=> {
-  let domNode = $.dom(node.instance);
+// input:name(email)
+$.createPseudo('name', function (name) {
+  // return a function that matches against elements or instances
+  return function (node) {
+    return $(node).is(`[name=${name}]`)
+  }
+})
 
-  // Nodes can be wrapped in a teaspoon collection
-  return $(node).is('[disabled]')
-    || (domNode && domNode.disabled)
+// We want to test if an element has a sibling that matches
+// a selector e.g. :nextSibling(.foo)
+$.createPseudo('nextSibling', function (selector) {
+  // turning the selector into a matching function up front
+  // is a bit more performant, alternatively we could just do $(node).is(selector);
+  let matcher = $.compileSelector(selector)
+
+  return function (node) {
+    let sibling = node.nextSibling;
+    return sibling != null && matcher(sibling)
+  }
 })
 ```
-
-If you want your pseudo selector to accept something other than a _selector_ as it's inner argument
-(as in `:has('foo')`), then pass `false` as the second argument (`registerPseudo(myPseudo, false, testFunction)`).
 
 ## API
 
@@ -386,19 +397,24 @@ rendered.unmount()
 
 The methods are shared by both Element and Instance Collections.
 
-##### `$.selector` -> selector _(alias: $.s)_
+##### `$.selector` => selector _(alias: $.s)_
 
 Selector creation function.
 
-##### `$.dom -> HTMLElement`
+##### `$.dom(instance) => HTMLElement`
 
 Returns the DOM nodes for a component instance, if it exists.
+
+##### `$.compileSelector(selector) => (node) => bool`
+
+Compiles a selector into a function that matches a node
+
 
 ##### `$.fn.length`
 
 The length of the collection.
 
-##### `$.fn.unwrap()`
+##### `$.fn.unwrap() => Element|Instance|HTMLElement`
 
 Unwraps a collection of a single item returning the item. Equivalent to `$el[0]`; throws when there
 is more than one item in the collection.
@@ -409,11 +425,11 @@ $(<div><strong>hi!</strong></div>)
   .unwrap() // -> <strong>hi!</strong>
 ```
 
-##### `$.fn.get() -> Array` (alias: toArray())
+##### `$.fn.get() => Array` (alias: toArray())
 
 Returns a real JavaScript array of the collection items.
 
-##### `$.fn.tap() -> function(Collection)`
+##### `$.fn.tap() => function(Collection)`
 
 Run an arbitrary function against the collection, helpful for making assertions while chaining.
 

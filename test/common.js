@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactTestUtils from 'react-addons-test-utils';
-import { unmountComponentAtNode, render } from 'react-dom';
+import { unmountComponentAtNode } from 'react-dom';
 import $ from '../src';
 import ElementCollection from '../src/element';
 import InstanceCollection from '../src/instance';
@@ -82,6 +82,33 @@ describe('common', ()=> {
       .to.not.exist
   })
 
+  it('should track query root object', ()=> {
+    let inst = $(<Example />).shallowRender()
+
+    inst
+      .find('Stateless')
+      .tap(child => child.root.should.equal(inst))
+      .find('strong')
+      .tap(child => child.root.should.equal(inst))
+  })
+
+  it('should track prevObject', ()=> {
+    let inst = $(<Example />).shallowRender()
+      , second;
+
+    second = inst
+      .find('Stateless')
+      .tap(child =>
+        child.prevObject.should.equal(inst)
+      )
+
+    second
+      .find('strong')
+      .tap(child =>
+        child.prevObject.should.equal(second)
+      )
+  })
+
   it('should shallow render element', ()=> {
     let inst = $(<Example />).shallowRender()
     inst[0].type.should.equal(Example)
@@ -137,7 +164,7 @@ describe('common', ()=> {
 
     let types = {
       shallow: (elements, context) => $(elements).shallowRender(null, context),
-      DOM: (elements, context) => $(elements).render(context),
+      DOM: (elements, context) => $(elements).render(context)
     }
 
     Object.keys(types).forEach(type => {
@@ -153,6 +180,17 @@ describe('common', ()=> {
           let inst = render(<Stateless />)
           inst[0].should.exist
           inst.is(Stateless).should.equal(true)
+        })
+
+        it.only('.end()', () => {
+          render(<Example />)
+            .find(Stateless)
+              .find('strong')
+                .tap(inst => inst.is('strong'))
+              .end()
+            .tap(inst => inst.is(Stateless))
+            .end()
+          .tap(inst => inst.is(Example))
         })
 
         it('.get()', ()=> {
@@ -173,7 +211,27 @@ describe('common', ()=> {
         })
 
         it('registerPseudo() should allow pseudo extensions', ()=> {
-          $.registerPseudo('foo', (node, test) => {
+          let stub = sinon.stub(console, 'error');
+
+          $.registerPseudo('foo', false, (node, value) => {
+            value.should.equal('4')
+            return $(node).is('.foo')
+          })
+
+          $.registerPseudo('bar', (node, value) => {
+            value.should.be.a('function')
+            return $(node).is('.foo')
+          })
+
+          render(<Example />).find(':foo(4)').length.should.equal(3)
+          render(<Example />).find(':bar(.baz)').length.should.equal(3)
+
+          stub.should.have.been.calledTwice
+          console.error.restore() //eslint-disable-line
+        })
+
+        it('createPseudo() should allow pseudo extensions', ()=> {
+          $.createPseudo('foo', () => (node) => {
             return $(node).is('.foo')
           })
 
@@ -181,10 +239,9 @@ describe('common', ()=> {
         })
 
         it('.tap()', ()=> {
-          let spy = sinon.spy(function (n) { expect(n).to.exist.and.equal(this) })
-            , inst = render(<Example />);
+          let spy = sinon.spy(function (n) { expect(n).to.exist.and.equal(this) });
 
-           render(<Example />)
+          render(<Example />)
             .tap(spy)
             .find('li')
             .tap(spy)
@@ -231,7 +288,7 @@ describe('common', ()=> {
         })
 
         it('props() should throw on empty collecitons', ()=> {
-          ;(() => render(<Example />).find('article').props({ name: 'Steven' }))
+          (() => render(<Example />).find('article').props({ name: 'Steven' }))
             .should.throw('the method `props()` found no matching elements')
 
           ;(() => render(<Example />).find('article').props())
@@ -264,7 +321,7 @@ describe('common', ()=> {
         })
 
         it('state() should throw on empty collections', ()=> {
-          ;(() => render(<Example />).find('article').state({ name: 'Steven' }))
+          (() => render(<Example />).find('article').state({ name: 'Steven' }))
             .should.throw('the method `state()` found no matching elements')
 
           ;(() => render(<Example />).find('article').state())
@@ -300,7 +357,7 @@ describe('common', ()=> {
         })
 
         it('context() should throw on empty collections', ()=> {
-          ;(() => render(<Example />).find('article').context({ name: 'Steven' }))
+          (() => render(<Example />).find('article').context({ name: 'Steven' }))
             .should.throw('the method `context()` found no matching elements')
 
           ;(() => render(<Example />).find('article').context())
@@ -477,7 +534,7 @@ describe('common', ()=> {
         })
 
         it('.first() should throw if there are no elements', ()=> {
-          ;(() => render(<Example />).first('article'))
+          (() => render(<Example />).first('article'))
               .should.throw('the method `first()` found no matching elements')
         })
 
@@ -493,7 +550,7 @@ describe('common', ()=> {
         })
 
         it('.last() should throw if there are no elements', ()=> {
-          ;(() => render(<Example />).last('article'))
+          (() => render(<Example />).last('article'))
               .should.throw('the method `last()` found no matching elements')
         })
 
@@ -509,7 +566,7 @@ describe('common', ()=> {
         })
 
         it('.nth() should throw if there are no elements', ()=> {
-          ;(() => render(<Example />).nth(0, 'article'))
+          (() => render(<Example />).nth(0, 'article'))
               .should.throw('the method `nth()` found no matching elements')
         })
 
@@ -519,12 +576,12 @@ describe('common', ()=> {
         })
 
         it('.single() should throw more than one match is found', ()=> {
-          ;(()=> render(<Example />)
+          (()=> render(<Example />)
             .single('li')).should.throw()
         })
 
         it('.single() should throw when nothing found', ()=> {
-          ;(()=> render(<Example />)
+          (()=> render(<Example />)
             .single('article')).should.throw(/found: 0.+not 1/)
         })
 
@@ -534,7 +591,7 @@ describe('common', ()=> {
         })
 
         it('.any() should throw if no match is found', ()=> {
-          ;(()=> render(<Example />)
+          (()=> render(<Example />)
             .any('article')).should.throw(/found 0.+expected to find 1 or more/)
         })
 
@@ -544,7 +601,7 @@ describe('common', ()=> {
         })
 
         it('.none() should throw if a match is found', ()=> {
-          ;(()=> render(<Example />)
+          (()=> render(<Example />)
             .none('li')).should.throw(/found 3.+expected to find zero/)
         })
 
@@ -556,7 +613,7 @@ describe('common', ()=> {
         })
 
         it('.unwrap() should throw without exactly one node', ()=> {
-          ;(()=> render(list).children().unwrap()).should.throw()
+          (()=> render(list).children().unwrap()).should.throw()
 
           ;(()=> render(<div />).children().unwrap()).should.throw()
         })

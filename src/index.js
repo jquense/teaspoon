@@ -1,13 +1,13 @@
 import ElementCollection from './element'
 import InstanceCollection from './instance'
 import commonPrototype from './common';
-import { selector, registerPseudo } from 'bill';
+import warning from 'warning';
+import { compile,  selector, registerPseudo } from 'bill';
 import { createNode, NODE_TYPES } from 'bill/node';
-import { match, getPublicInstances } from './utils';
+import { qsa, matches } from './utils';
 
 import * as utils from './utils';
 
-let isComponent = el => utils.isDOMComponent(el) || utils.isCompositeComponent(el)
 let $ = NodeCollection;
 
 function NodeCollection(elements) {
@@ -23,7 +23,9 @@ function NodeCollection(elements) {
 $.fn = $.prototype = commonPrototype
 
 Object.assign($, {
-  match,
+  querySelectorAll: qsa,
+  match: qsa,
+  matches,
   selector,
   s: selector,
   isQueryCollection: utils.isQueryCollection,
@@ -34,18 +36,34 @@ $.element = ElementCollection
 $.instance = InstanceCollection
 
 $.registerPseudo = (pseudo, isSelector, fn)=> {
+  warning(false,
+    '`registerPseudo()` has been deprecated in favor of `createPseudo`'
+  )
   if (typeof isSelector === 'function')
     fn = isSelector, isSelector = true;
 
-  registerPseudo(pseudo, isSelector, test =>
-    node => fn(node, test))
+  registerPseudo(pseudo, value => {
+    let test = isSelector ? compile(value) : value;
+    return node => fn(node, test)
+  })
 }
 
-$.registerPseudo('contains', false, (node, text) => {
+$.compileSelector = function(selector) {
+  let matcher = compile(selector)
+  return (subject) => {
+    return utils.isQueryCollection(subject)
+      ? subject.nodes.every(matcher)
+      : matcher(subject)
+  }
+}
+
+$.createPseudo = registerPseudo
+
+$.createPseudo('contains', text => node => {
   return ($(node).text() || '').indexOf(text) !== -1
 })
 
-$.registerPseudo('textContent', false, (node, text) => {
+$.createPseudo('textContent', text => node => {
   let textContent = node.children
     .filter(n => n.nodeType === NODE_TYPES.TEXT)
     .map(n => n.element)

@@ -1,15 +1,12 @@
-import React from 'react';
 import ReactDOM from 'react-dom';
-import ReactUpdateQueue from 'react/lib/ReactUpdateQueue';
-import ReactInstanceMap from 'react/lib/ReactInstanceMap';
 import ReactTestUtils from'react-addons-test-utils';
 
-import closest from 'dom-helpers/query/closest';
 import createCollection from './QueryCollection';
-import * as utils from './utils';
-import selector from 'bill';
 
-let { assertLength, assertRoot, assertStateful, collectArgs } = utils;
+import {
+    render, getMountPoint, findDOMNode
+  , assertLength, assertStateful
+  , attachElementsToCollection, collectArgs } from './utils';
 
 let createCallback = (collection, fn) => ()=> fn.call(collection, collection)
 
@@ -26,11 +23,11 @@ function getSetterMethod(key){
       return value && data ? data[value] : data
     }
 
-    let { instance } = utils.render(this, null, {
+    let { instance } = render(this, null, {
       [key]: { ...data, ...value }
     })
 
-    utils.attachElementsToCollection(this, instance)
+    attachElementsToCollection(this, instance)
     return this
   }
 }
@@ -41,9 +38,9 @@ let $ = createCollection(function (element, lastCollection) {
   if (!lastCollection) {
     try {
       // no idea if I can do this in 0.15
-      this._mountPoint = utils.getMountPoint(first.instance)
+      this._mountPoint = getMountPoint(first.instance)
     }
-    catch (err) {}
+    catch (err) {} // eslint-disable-line
   }
   else
     this._mountPoint = lastCollection._mountPoint
@@ -78,7 +75,7 @@ Object.assign($.fn, {
   },
 
   dom() {
-    return unwrap(this._map(utils.findDOMNode))
+    return unwrap(this._map(findDOMNode))
   },
 
   props: getSetterMethod('props'),
@@ -118,7 +115,7 @@ Object.assign($.fn, {
       throw new TypeError( '"' + event + '" is not a supported DOM event')
 
     return this.each(component =>
-      ReactTestUtils.Simulate[event](utils.findDOMNode(component), data))
+      ReactTestUtils.Simulate[event](findDOMNode(component), data))
   }
 })
 
