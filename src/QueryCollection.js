@@ -18,7 +18,8 @@ export default function createCollection(ctor) {
     }
 
     this._isQueryCollection = true
-    this.root = lastCollection || this
+    this.prevObject = lastCollection
+    this.root = lastCollection ? lastCollection.root : this
 
     attachElementsToCollection(this, elements)
 

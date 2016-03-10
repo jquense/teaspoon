@@ -27,6 +27,10 @@ let common = {
     return this;
   },
 
+  end() {
+    return this.prevObject || this;
+  },
+
   tap(fn) {
     fn.call(this, this)
     return this

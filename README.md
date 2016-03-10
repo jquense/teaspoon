@@ -441,6 +441,18 @@ $(<MyComponent/>).render()
   .find('.foo')
 ```
 
+##### `$.fn.end() => Collection`
+
+Exits a chain, by returning the previous collection
+
+```js
+$(<MyComponent/>).render()
+  .find('ul')
+    .single()
+  .end()
+  .find('div')
+```
+
 ##### `$.fn.each(Function iteratorFn)`
 
 An analog to `Array.prototype.forEach`; iterates over the collection calling the `iteratorFn`
