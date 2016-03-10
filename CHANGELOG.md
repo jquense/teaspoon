@@ -1,3 +1,11 @@
+v6.2.0 - Thu, 10 Mar 2016 17:54:07 GMT
+--------------------------------------
+
+- [05cd431](../../commit/05cd431) [added] end() method for exiting chains
+- [0b774a0](../../commit/0b774a0) [added] nth() method
+
+
+
 v6.1.2 - Sat, 13 Feb 2016 20:14:09 GMT
 --------------------------------------
 
