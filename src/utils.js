@@ -186,7 +186,7 @@ export function getRootInstance(mountPoint){
 }
 
 export function findDOMNode(component){
-  return component instanceof HTMLElement
+  return component instanceof window.HTMLElement
     ? component
     : component && component._rootID
         ? getNode(component._rootID)
