@@ -1,3 +1,12 @@
+v6.3.0 - Fri, 08 Apr 2016 14:11:34 GMT
+--------------------------------------
+
+- [22e192a](../../commit/22e192a) [added] react 15 support
+- [05cd431](../../commit/05cd431) [added] end() method for exiting chains
+- [0b774a0](../../commit/0b774a0) [added] nth() method
+
+
+
 v6.2.0 - Thu, 10 Mar 2016 17:54:07 GMT
 --------------------------------------
 
