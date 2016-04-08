@@ -4,9 +4,13 @@
   "description": "jQuery-esque Api for React elements and instances, supports complex css selectors",
   "main": "lib/index.js",
   "scripts": {
-    "test": "karma start --single-run",
+    "test": "npm run react:14 && npm run test-current && npm run react:15 && npm run test-current",
+    "test-current": "karma start --single-run",
     "tdd": "karma start",
     "toc": "doctoc README.md --github",
+    "react:clean": "rimraf node_modules/react node_modules/react-dom node_modules/react-addons-test-utils",
+    "react:14": "npm run react:clean && npm i react@0.14 react-dom@0.14 react-addons-test-utils@0.14",
+    "react:15": "npm run react:clean && npm i react@15 react-dom@15 react-addons-test-utils@15",
     "build": "babel src --out-dir lib  && npm run toc && cpy ./README.md ./lib",
     "release": "release"
   },
@@ -26,8 +30,8 @@
   },
   "homepage": "https://github.com/jquense/teaspoon",
   "peerDependencies": {
-    "react": "^0.14.0-rc1",
-    "react-dom": "^0.14.0-rc1"
+    "react": "^0.14.0-rc1 || ^15.0.0",
+    "react-dom": "^0.14.0-rc1 || ^15.0.0"
   },
   "devDependencies": {
     "babel": "^5.8.25",
@@ -52,24 +56,21 @@
     "karma-webpack": "^1.7.0",
     "mocha": "^2.3.3",
     "mt-changelog": "^0.6.2",
-    "react": "^0.14.3",
-    "react-dom": "^0.14.0-rc1",
-    "release-script": "^0.5.3",
+    "release-script": "^1.0.2",
     "sinon": "^1.17.1",
     "sinon-chai": "^2.8.0",
     "webpack": "^1.12.2"
   },
   "dependencies": {
-    "bill": "^3.1.0",
+    "bill": "^3.2.1",
     "dom-helpers": "^2.4.0",
     "invariant": "^2.2.0",
     "lodash": "^3.10.1",
     "promise": "^7.1.1",
-    "react-addons-test-utils": "^0.14.0-rc1",
+    "react-addons-test-utils": "^0.14.0-rc1 || ^15.0",
     "warning": "^2.1.0"
   },
   "release-script": {
-    "defaultDryRun": "false",
     "altPkgRootFolder": "lib"
   }
 }

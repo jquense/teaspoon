@@ -1,5 +1,5 @@
 import React from 'react';
-import { render } from 'react-dom';
+import { render, findDOMNode } from 'react-dom';
 import $ from '../src';
 
 describe('DOM rendering specific', ()=> {
@@ -36,12 +36,21 @@ describe('DOM rendering specific', ()=> {
   }
 
   it('should wrap existing mounted component', ()=> {
+    class Div extends React.Component {
+      render(){ return <div {...this.props} /> }
+    }
     let mount = document.createElement('div')
-      , instance = render(<div className='test'/>, mount)
+      , instance = render(<Div className='test'><span/></Div>, mount)
 
     let $inst = $(instance);
 
     expect($inst[0]).to.equal(instance);
+    expect($inst._mountPoint).to.equal(mount)
+
+    let span = findDOMNode(instance).children[0];
+    $inst = $(span);
+
+    expect($inst[0]).to.equal(span);
     expect($inst._mountPoint).to.equal(mount)
   })
 

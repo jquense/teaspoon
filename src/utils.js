@@ -7,6 +7,7 @@ import ReactTestUtils from'react-addons-test-utils';
 import invariant from 'invariant';
 
 import bill from 'bill';
+import { ifDef } from 'bill/compat';
 import { createNode, NODE_TYPES } from 'bill/node';
 
 export let isDOMComponent = ReactTestUtils.isDOMComponent;
@@ -62,7 +63,7 @@ export function render(element, mount, { props, context }, renderFn) {
 
   if (!renderInstance)
     renderInstance = instance
-    
+
   if (instance === null) {
     renderInstance = null;
     wrapper = wrapElement(element, null, prevWrapper)
@@ -175,11 +176,17 @@ export function wrapElement(element, context, prevWrapper) {
   return <TspWrapper context={context}>{element}</TspWrapper>
 }
 
-
-export function getMountPoint(instance){
-  var id = getID(findDOMNode(instance));
-  return findReactContainerForID(id);
-}
+export let getMountPoint = ifDef({
+  '<15':  function getMountPoint(instance) {
+    var id = getID(findDOMNode(instance));
+    return findReactContainerForID(id);
+  },
+  '*': function getMountPoint(instance) {
+    let privInst = createNode(instance).privateInstance
+    let container = createNode(privInst._nativeContainerInfo._topLevelWrapper)
+    return findDOMNode(container.instance).parentNode
+  }
+})
 
 export function getRootInstance(mountPoint){
   return _instancesByReactRootID[getReactRootID(mountPoint)];

@@ -182,7 +182,7 @@ describe('common', ()=> {
           inst.is(Stateless).should.equal(true)
         })
 
-        it.only('.end()', () => {
+        it('.end()', () => {
           render(<Example />)
             .find(Stateless)
               .find('strong')
