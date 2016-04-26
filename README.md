@@ -28,6 +28,7 @@ __migrating? Check out the [update guide](Migration.md)__
       - [`$.selector` => selector _(alias: $.s)_](#selector--selector-_alias-s_)
       - [`$.dom(instance) => HTMLElement`](#dominstance--htmlelement)
       - [`$.compileSelector(selector) => (node) => bool`](#compileselectorselector--node--bool)
+      - [`$.defaultContext(context: ?object) => (node) => bool`](#defaultcontextcontext-object--node--bool)
       - [`$.fn.length`](#fnlength)
       - [`$.fn.unwrap() => Element|Instance|HTMLElement`](#fnunwrap--elementinstancehtmlelement)
       - [`$.fn.get() => Array` (alias: toArray())](#fnget--array-alias-toarray)

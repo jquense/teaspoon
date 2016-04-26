@@ -28,6 +28,7 @@ __migrating? Check out the [update guide](Migration.md)__
       - [`$.selector` => selector _(alias: $.s)_](#selector--selector-_alias-s_)
       - [`$.dom(instance) => HTMLElement`](#dominstance--htmlelement)
       - [`$.compileSelector(selector) => (node) => bool`](#compileselectorselector--node--bool)
+      - [`$.defaultContext(context: ?object) => (node) => bool`](#defaultcontextcontext-object--node--bool)
       - [`$.fn.length`](#fnlength)
       - [`$.fn.unwrap() => Element|Instance|HTMLElement`](#fnunwrap--elementinstancehtmlelement)
       - [`$.fn.get() => Array` (alias: toArray())](#fnget--array-alias-toarray)
@@ -412,6 +413,11 @@ Returns the DOM nodes for a component instance, if it exists.
 
 Compiles a selector into a function that matches a node
 
+##### `$.defaultContext(context: ?object) => (node) => bool`
+
+You can globally set a context object to be used for each and all renders,
+shallow or otherwise. This is helpful for context that is available to all
+levels of the application, like the `router`, i18n context, or a Redux Store.
 
 ##### `$.fn.length`
 
