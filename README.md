@@ -412,6 +412,11 @@ Returns the DOM nodes for a component instance, if it exists.
 
 Compiles a selector into a function that matches a node
 
+##### `$.defaultContext(context: ?object) => (node) => bool`
+
+You can globally set a context object to be used for each and all renders,
+shallow or otherwise. This is helpful for context that is available to all
+levels of the application, like the `router`, i18n context, or a Redux Store.
 
 ##### `$.fn.length`
 

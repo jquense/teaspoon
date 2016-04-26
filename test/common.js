@@ -36,6 +36,10 @@ describe('common', ()=> {
     }
   })
 
+  afterEach(() => {
+    $.defaultContext(null);
+  })
+
   it('should create collection', ()=>{
     $(<div/>).length.should.equal(1)
     $(<div/>)[0].type.should.equal('div')
@@ -362,6 +366,18 @@ describe('common', ()=> {
 
           ;(() => render(<Example />).find('article').context())
             .should.throw('the method `context()` found no matching elements')
+        })
+
+        it('should use default context', ()=> {
+          let context = { question: ', who dis?'};
+
+          $.defaultContext(context);
+
+          render(<Example />)
+            .context('question').should.equal(context.question)
+
+          render(<Example />)
+            .context().should.eql(context)
         })
 
         it('should not reuse nodes on rerenders', ()=> {

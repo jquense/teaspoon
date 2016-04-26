@@ -50,9 +50,8 @@ export function render(element, mount, { props, context }, renderFn) {
     element = node.element;
   }
 
-  if (props) {
+  if (props)
     element = React.cloneElement(element, props);
-  }
 
   if (context) {
     wrapper = element = wrapElement(element, context, prevWrapper)

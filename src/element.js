@@ -8,6 +8,7 @@ import {
 } from './utils';
 
 import { createNode } from 'bill/node';
+import defaults from './defaults';
 import invariant from 'invariant';
 
 let createCallback = (collection, fn) => ()=> fn.call(collection, collection)
@@ -64,7 +65,12 @@ Object.assign($.fn, {
     if (intoDocument)
       document.body.appendChild(mount)
 
-    let { instance, wrapper } = render(element, mount, { context })
+    if (defaults.context && context)
+      context = { ...defaults.context, ...context }
+
+    let { instance, wrapper } = render(element, mount, {
+      context: context || defaults.context
+    })
 
     let collection = iQuery(instance);
 
@@ -87,7 +93,10 @@ Object.assign($.fn, {
 
     let renderer = ReactTestUtils.createRenderer()
 
-    renderer.render(element, context);
+    if (defaults.context && context)
+      context = { ...defaults.context, ...context }
+
+    renderer.render(element, context || defaults.context);
 
     let collection = $(getShallowTreeWithRoot(renderer));
 

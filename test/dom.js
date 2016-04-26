@@ -35,7 +35,7 @@ describe('DOM rendering specific', ()=> {
     }
   }
 
-  it.only('should wrap existing mounted component', ()=> {
+  it('should wrap existing mounted component', ()=> {
     class Div extends React.Component {
       render(){ return <div {...this.props} /> }
     }

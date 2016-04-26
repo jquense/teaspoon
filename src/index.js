@@ -2,9 +2,11 @@ import ElementCollection from './element'
 import InstanceCollection from './instance'
 import commonPrototype from './common';
 import warning from 'warning';
+import invariant from 'invariant';
 import { compile,  selector, registerPseudo } from 'bill';
 import { createNode, NODE_TYPES } from 'bill/node';
 import { qsa, matches } from './utils';
+import defaults from './defaults';
 
 import * as utils from './utils';
 
@@ -71,5 +73,16 @@ $.createPseudo('textContent', text => node => {
 
   return (!text && !!textContent) || text === textContent
 })
+
+$.defaultContext = (obj) => {
+  invariant(typeof obj === 'object',
+    '[teaspoon]: Default context must be an object or null.'
+  );
+
+  if (!obj || Object.keys(obj) === 0)
+    obj = null;
+
+  defaults.context = obj
+};
 
 module.exports = $
