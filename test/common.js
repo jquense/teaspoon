@@ -274,7 +274,6 @@ describe('common', ()=> {
         })
 
         it('props() should change props', ()=> {
-
           render(<Example name='rikki-tikki-tavi'/>)
             .tap(inst => {
               inst.first('div > :text').unwrap()

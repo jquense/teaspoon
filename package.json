@@ -62,7 +62,7 @@
     "webpack": "^1.12.2"
   },
   "dependencies": {
-    "bill": "^3.2.1",
+    "bill": "^3.2.6",
     "dom-helpers": "^2.4.0",
     "invariant": "^2.2.0",
     "lodash": "^3.10.1",

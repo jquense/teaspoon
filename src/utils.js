@@ -1,14 +1,24 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {
-    getID, getNode, findReactContainerForID
-  , getReactRootID, _instancesByReactRootID } from 'react/lib/ReactMount';
-import ReactTestUtils from'react-addons-test-utils';
+import ReactTestUtils from 'react-addons-test-utils';
 import invariant from 'invariant';
 
 import bill from 'bill';
 import { ifDef } from 'bill/compat';
 import { createNode, NODE_TYPES } from 'bill/node';
+
+let ReactMount = {};
+
+try {
+  ReactMount = ifDef({
+    '>=15.4.x': () => require('react-dom/lib/ReactMount'),
+    '*': () => require('react/lib/ReactMount')
+  })();
+} catch (err) { /* empty */ }
+
+let {
+    getID, getNode, findReactContainerForID
+  , getReactRootID, _instancesByReactRootID } = ReactMount;
 
 export let isDOMComponent = ReactTestUtils.isDOMComponent;
 
@@ -176,14 +186,15 @@ export function wrapElement(element, context, prevWrapper) {
 }
 
 export let getMountPoint = ifDef({
-  '<15':  function getMountPoint(instance) {
-    var id = getID(findDOMNode(instance));
-    return findReactContainerForID(id);
+  '>=15.x.x': function getMountPoint(instance) {
+    let privInst = createNode(instance).privateInstance
+    let info = privInst._nativeContainerInfo || privInst._hostContainerInfo;
+    let container = createNode(info._topLevelWrapper)
+    return findDOMNode(container.instance).parentNode
   },
   '*': function getMountPoint(instance) {
-    let privInst = createNode(instance).privateInstance
-    let container = createNode(privInst._nativeContainerInfo._topLevelWrapper)
-    return findDOMNode(container.instance).parentNode
+    var id = getID(findDOMNode(instance));
+    return findReactContainerForID(id);
   }
 })
 

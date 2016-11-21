@@ -30,8 +30,8 @@ function spyOnUpdate(inst, fn) {
   let didUpdate = inst.componentDidUpdate;
 
   inst.componentDidUpdate = function(...args) {
-    fn(...args)
-    didUpdate && didUpdate(...args)
+    fn.apply(this, args)
+    didUpdate && didUpdate.apply(this, args)
   }
 }
 
