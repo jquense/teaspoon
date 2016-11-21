@@ -21,7 +21,7 @@ __migrating? Check out the [update guide](Migration.md)__
 - [API](#api)
   - [Rendering](#rendering)
       - [`$.fn.render([Bool renderIntoDocument, HTMLElement mountPoint, Object context ])`](#fnrenderbool-renderintodocument-htmlelement-mountpoint-object-context-)
-      - [`$.fn.shallowRender([props]) -> ElementCollection`](#fnshallowrenderprops---elementcollection)
+      - [`$.fn.shallowRender([props, context]) -> ElementCollection`](#fnshallowrenderprops-context---elementcollection)
       - [`$.element.fn.update()`](#elementfnupdate)
       - [`$.instance.fn.unmount()`](#instancefnunmount)
   - [Utility methods and properties](#utility-methods-and-properties)
@@ -359,7 +359,7 @@ $elements = $(elements).render(true);
 $elements = $(elements).render(document.createElement('span'));
 ```
 
-##### `$.fn.shallowRender([props]) -> ElementCollection`
+##### `$.fn.shallowRender([props, context]) -> ElementCollection`
 
 Use the React shallow renderer utilities to _shallowly_ render the first element of the collection.
 

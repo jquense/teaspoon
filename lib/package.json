@@ -1,6 +1,6 @@
 {
   "name": "teaspoon",
-  "version": "6.4.0",
+  "version": "6.4.2",
   "description": "jQuery-esque Api for React elements and instances, supports complex css selectors",
   "main": "index.js",
   "repository": {
@@ -23,7 +23,7 @@
     "react-dom": "^0.14.0-rc1 || ^15.0.0"
   },
   "dependencies": {
-    "bill": "^3.2.1",
+    "bill": "^3.2.6",
     "dom-helpers": "^2.4.0",
     "invariant": "^2.2.0",
     "lodash": "^3.10.1",
