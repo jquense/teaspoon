@@ -9,6 +9,7 @@ Just the right amount of abstraction for writing clear, and concise React compon
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [Getting Started](#getting-started)
+  - [Usage](#usage)
   - [Using selectors](#using-selectors)
   - [Complex selectors](#complex-selectors)
 - [Testing patterns](#testing-patterns)
@@ -16,6 +17,7 @@ Just the right amount of abstraction for writing clear, and concise React compon
   - [Test specific querying ("ref" style querying).](#test-specific-querying-ref-style-querying)
 - [Adding collection methods and pseudo selectors](#adding-collection-methods-and-pseudo-selectors)
   - [createPseudo(pseudo: string, handler: (innerValue: string) => (node: Node) => bool)](#createpseudopseudo-string-handler-innervalue-string--node-node--bool)
+  - [Build warnings with webpack](#build-warnings-with-webpack)
 - [API](#api)
   - [Rendering](#rendering)
       - [`$.fn.render([Bool renderIntoDocument, HTMLElement mountPoint, Object context ])`](#fnrenderbool-renderintodocument-htmlelement-mountpoint-object-context-)

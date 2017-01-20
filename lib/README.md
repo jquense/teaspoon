@@ -4,13 +4,12 @@ teaspoon
 
 Just the right amount of abstraction for writing clear, and concise React component tests.
 
-__migrating? Check out the [update guide](Migration.md)__
-
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [Getting Started](#getting-started)
+  - [Usage](#usage)
   - [Using selectors](#using-selectors)
   - [Complex selectors](#complex-selectors)
 - [Testing patterns](#testing-patterns)
@@ -18,6 +17,7 @@ __migrating? Check out the [update guide](Migration.md)__
   - [Test specific querying ("ref" style querying).](#test-specific-querying-ref-style-querying)
 - [Adding collection methods and pseudo selectors](#adding-collection-methods-and-pseudo-selectors)
   - [createPseudo(pseudo: string, handler: (innerValue: string) => (node: Node) => bool)](#createpseudopseudo-string-handler-innervalue-string--node-node--bool)
+  - [Build warnings with webpack](#build-warnings-with-webpack)
 - [API](#api)
   - [Rendering](#rendering)
       - [`$.fn.render([Bool renderIntoDocument, HTMLElement mountPoint, Object context ])`](#fnrenderbool-renderintodocument-htmlelement-mountpoint-object-context-)
@@ -80,6 +80,9 @@ whether that's a browser, headless browser, or jsdom.
 
 Like jQuery teaspoon exports a function that creates a collection of nodes; except in this case
 you select React elements instead of DOM nodes.
+
+
+### Usage
 
 ```js
 import $ from 'teaspoon';
@@ -320,6 +323,26 @@ $.createPseudo('nextSibling', function (selector) {
     return sibling != null && matcher(sibling)
   }
 })
+```
+
+
+### Build warnings with webpack
+
+Teaspoon has a few conditional `require`s in order to support versions of React across major versions. This tends to
+mean webpack warns about missing files, even when they aren't actually bugs. You can ignore the warnings or add an extra
+bit of config to silence them.
+
+```js
+/* webpack.config.js */
+// ...
+externals: {
+  // use for react 15.4.+
+  'react/lib/ReactMount': true,
+
+  // use for React any version below that
+  'react-dom/lib/ReactMount': true,
+}
+// ...
 ```
 
 ## API
