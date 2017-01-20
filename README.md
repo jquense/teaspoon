@@ -15,9 +15,9 @@ Just the right amount of abstraction for writing clear, and concise React compon
 - [Testing patterns](#testing-patterns)
   - [Using `tap()`](#using-tap)
   - [Test specific querying ("ref" style querying).](#test-specific-querying-ref-style-querying)
+  - [Build warnings with webpack](#build-warnings-with-webpack)
 - [Adding collection methods and pseudo selectors](#adding-collection-methods-and-pseudo-selectors)
   - [createPseudo(pseudo: string, handler: (innerValue: string) => (node: Node) => bool)](#createpseudopseudo-string-handler-innervalue-string--node-node--bool)
-  - [Build warnings with webpack](#build-warnings-with-webpack)
 - [API](#api)
   - [Rendering](#rendering)
       - [`$.fn.render([Bool renderIntoDocument, HTMLElement mountPoint, Object context ])`](#fnrenderbool-renderintodocument-htmlelement-mountpoint-object-context-)
@@ -272,6 +272,26 @@ $(<Greeting name='Betty' />)
 You can adapt and expand this pattern however your team likes, maybe just using the single testing prop or a few.
 You can also add some helper methods or pseudo selectors to help codify enforce your teams testing conventions.
 
+### Build warnings with webpack
+
+Teaspoon has a few conditional `require`s in order to support versions of React across major versions. This tends to
+mean webpack warns about missing files, even when they aren't actually bugs. You can ignore the warnings or add an extra
+bit of config to silence them.
+
+```js
+/* webpack.config.js */
+// ...
+externals: {
+  // use for react 15.4.+
+  'react/lib/ReactMount': true,
+
+  // use for React any version below that
+  'react-dom/lib/ReactMount': true,
+}
+// ...
+```
+
+
 ## Adding collection methods and pseudo selectors
 
 Teaspoon also allows extending itself and adding new pseudo selectors using a fairly straight forward API.
@@ -323,26 +343,6 @@ $.createPseudo('nextSibling', function (selector) {
     return sibling != null && matcher(sibling)
   }
 })
-```
-
-
-### Build warnings with webpack
-
-Teaspoon has a few conditional `require`s in order to support versions of React across major versions. This tends to
-mean webpack warns about missing files, even when they aren't actually bugs. You can ignore the warnings or add an extra
-bit of config to silence them.
-
-```js
-/* webpack.config.js */
-// ...
-externals: {
-  // use for react 15.4.+
-  'react/lib/ReactMount': true,
-
-  // use for React any version below that
-  'react-dom/lib/ReactMount': true,
-}
-// ...
 ```
 
 ## API
