@@ -7,14 +7,16 @@ import bill from 'bill';
 import { ifDef } from 'bill/compat';
 import { createNode, NODE_TYPES } from 'bill/node';
 
-let ReactMount = {};
+let ReactMount;
 
 try {
-  ReactMount = ifDef({
-    '>=15.4.x': () => require('react-dom/lib/ReactMount'),
-    '*': () => require('react/lib/ReactMount')
-  })();
+  ReactMount = require('react-dom/lib/ReactMount')
 } catch (err) { /* empty */ }
+try {
+  ReactMount = ReactMount || require('react/lib/ReactMount')
+} catch (err) { /* empty */ }
+
+ReactMount = ReactMount || {};
 
 let {
     getID, getNode, findReactContainerForID
