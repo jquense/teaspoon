@@ -1,11 +1,10 @@
 import ReactDOM from 'react-dom';
-import ReactTestUtils from'react-addons-test-utils';
 
 import createCollection from './QueryCollection';
 
 import {
     render, getMountPoint, findDOMNode
-  , assertLength, assertStateful
+  , assertLength, assertStateful, Simulate
   , attachElementsToCollection, collectArgs } from './utils';
 
 let createCallback = (collection, fn) => ()=> fn.call(collection, collection)
@@ -37,6 +36,7 @@ let $ = createCollection(function (element, lastCollection) {
 
   if (!lastCollection) {
     try {
+
       // no idea if I can do this in 0.15
       this._mountPoint = getMountPoint(first.instance)
     }
@@ -111,11 +111,11 @@ Object.assign($.fn, {
     if (event.substr(0, 2) === 'on' )
       event = event.substr(2, 1).toLowerCase() + event.substr(3)
 
-    if (!(event in ReactTestUtils.Simulate))
+    if (!(event in Simulate))
       throw new TypeError( '"' + event + '" is not a supported DOM event')
 
     return this.each(component =>
-      ReactTestUtils.Simulate[event](findDOMNode(component), data))
+      Simulate[event](findDOMNode(component), data))
   }
 })
 

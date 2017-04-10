@@ -1,26 +1,23 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import ReactTestUtils from 'react-addons-test-utils';
 import invariant from 'invariant';
 
 import bill from 'bill';
 import { ifDef } from 'bill/compat';
 import { createNode, NODE_TYPES } from 'bill/node';
 
-let ReactMount;
+let ReactTestUtils = require('react-dom/test-utils');
+let ReactShallowRenderer = require('react-test-renderer/shallow');
+let ReactMount = require('react-dom/lib/ReactMount')
 
-try {
-  ReactMount = require('react-dom/lib/ReactMount')
-} catch (err) { /* empty */ }
-try {
-  ReactMount = ReactMount || require('react/lib/ReactMount')
-} catch (err) { /* empty */ }
-
-ReactMount = ReactMount || {};
 
 let {
     getID, getNode, findReactContainerForID
   , getReactRootID, _instancesByReactRootID } = ReactMount;
+
+export const Simulate = ReactTestUtils.Simulate;
+
+export const createShallowRenderer = () => new ReactShallowRenderer();
 
 export let isDOMComponent = ReactTestUtils.isDOMComponent;
 
@@ -181,7 +178,7 @@ export function wrapElement(element, context, prevWrapper) {
 
   if (context) {
     TspWrapper.childContextTypes = Object.keys(context)
-      .reduce((t, k) => ({ ...t, [k]: React.PropTypes.any }), {})
+      .reduce((t, k) => ({ ...t, [k]: () => {} }), {})
   }
 
   return <TspWrapper context={context}>{element}</TspWrapper>

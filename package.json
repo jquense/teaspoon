@@ -4,12 +4,11 @@
   "description": "jQuery-esque Api for React elements and instances, supports complex css selectors",
   "main": "lib/index.js",
   "scripts": {
-    "test": "npm run react:14 && npm run test-current && npm run react:15 && npm run test-current",
-    "test-current": "karma start --single-run",
-    "tdd": "karma start",
+    "test": "npm run react:15 && npm run test-current",
+    "test-current": "jest",
+    "tdd": "jest --watch",
     "toc": "doctoc README.md --github",
     "react:clean": "rimraf node_modules/react node_modules/react-dom node_modules/react-addons-test-utils",
-    "react:14": "npm run react:clean && npm i react@0.14 react-dom@0.14 react-addons-test-utils@0.14",
     "react:15": "npm run react:clean && npm i react@15 react-dom@15 react-addons-test-utils@15",
     "build": "babel src --out-dir lib  && npm run toc && cpy ./README.md ./lib",
     "release": "release"
@@ -29,37 +28,34 @@
     "url": "https://github.com/jquense/teaspoon/issues"
   },
   "homepage": "https://github.com/jquense/teaspoon",
+  "jest": {
+    "setupTestFrameworkScriptFile": "./test-setup.js",
+    "testRegex": "tests\\/.+\\.js$"
+  },
   "peerDependencies": {
-    "react": "^0.14.0-rc1 || ^15.0.0",
-    "react-dom": "^0.14.0-rc1 || ^15.0.0"
+    "react": "^15.5.0",
+    "react-dom": "^15.5.0"
   },
   "devDependencies": {
-    "babel": "^5.8.25",
+    "babel-cli": "^6.24.1",
     "babel-core": "^5.8.25",
-    "babel-eslint": "^5.0.0",
-    "babel-loader": "^5.3.2",
-    "babel-plugin-object-assign": "^1.2.1",
-    "chai": "^3.3.0",
+    "babel-jest": "^19.0.0",
+    "babel-preset-jason": "^2.0.1",
+    "chai": "^3.5.0",
     "cpy": "^3.4.1",
+    "dirty-chai": "^1.2.2",
     "doctoc": "^0.15.0",
-    "eslint": "^1.10.3",
-    "eslint-plugin-react": "^4.1.0",
-    "isparta": "^4.0.0",
-    "karma": "^0.13.10",
-    "karma-chai": "^0.1.0",
-    "karma-chrome-launcher": "^0.2.0",
-    "karma-cli": "^0.1.0",
-    "karma-coverage": "^0.5.3",
-    "karma-mocha": "^0.2.0",
-    "karma-mocha-reporter": "^1.1.1",
-    "karma-sinon": "^1.0.4",
-    "karma-webpack": "^1.7.0",
+    "eslint": "^3.19.0",
+    "eslint-config-jason": "^4.0.0",
+    "eslint-plugin-import": "^2.2.0",
+    "eslint-plugin-react": "^6.10.3",
+    "jest": "^19.0.2",
     "mocha": "^2.3.3",
     "mt-changelog": "^0.6.2",
     "release-script": "^1.0.2",
+    "rimraf": "^2.6.1",
     "sinon": "^1.17.1",
-    "sinon-chai": "^2.8.0",
-    "webpack": "^1.12.2"
+    "sinon-chai": "^2.9.0"
   },
   "dependencies": {
     "bill": "^3.2.6",
@@ -67,7 +63,7 @@
     "invariant": "^2.2.0",
     "lodash": "^3.10.1",
     "promise": "^7.1.1",
-    "react-addons-test-utils": "^0.14.0-rc1 || ^15.0",
+    "react-test-renderer": "^15.5.4",
     "warning": "^2.1.0"
   },
   "release-script": {

@@ -1,10 +1,17 @@
 import React from 'react';
-import ReactTestUtils from 'react-addons-test-utils';
 import { unmountComponentAtNode } from 'react-dom';
 import $ from '../src';
 import ElementCollection from '../src/element';
 import InstanceCollection from '../src/instance';
 import commonPrototype from '../src/common';
+
+
+let ReactTestUtils;
+try {
+  ReactTestUtils = require('react-dom/test-utils');
+} catch (err) {
+  ReactTestUtils = require('react-addons-test-utils')
+}
 
 describe('common', ()=> {
   let Stateless = () => <strong>foo</strong>
@@ -17,12 +24,12 @@ describe('common', ()=> {
     </ul>
   )
 
-  let Example = React.createClass({
-    contextTypes: {
-      question: React.PropTypes.string
-    },
+  class Example extends React.Component {
+    static contextTypes = {
+      question: () => {}
+    };
 
-    getInitialState(){ return { greeting: 'hello there: ' } },
+    state = { greeting: 'hello there: ' };
     render() {
       return (
         <div>
@@ -34,7 +41,7 @@ describe('common', ()=> {
         </div>
       )
     }
-  })
+  }
 
   afterEach(() => {
     $.defaultContext(null);
@@ -130,7 +137,7 @@ describe('common', ()=> {
     let instance = $(<div className='test'/>).render(mount)
 
     mount.children[0].classList.contains('test').should.equal(true)
-    instance._mountPoint.should.equal(mount)
+    expect(instance._mountPoint).to.equal(mount)
     document.contains(mount).should.equal(false)
   })
 
@@ -147,7 +154,7 @@ describe('common', ()=> {
     let instance = $(<div className='test'/>).render(true, mount)
 
     document.querySelectorAll('.test').length.should.equal(1)
-    instance._mountPoint.should.equal(mount)
+    expect(instance._mountPoint).to.equal(mount)
 
     document.contains(mount).should.equal(true)
 
@@ -182,7 +189,7 @@ describe('common', ()=> {
 
         it('should work with Stateless components as root', ()=>{
           let inst = render(<Stateless />)
-          inst[0].should.exist
+          expect(inst[0]).to.exist
           inst.is(Stateless).should.equal(true)
         })
 

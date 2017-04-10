@@ -1,10 +1,11 @@
 import React, { cloneElement } from 'react';
-import ReactTestUtils from'react-addons-test-utils';
+
 import createQueryCollection from './QueryCollection';
 import iQuery from './instance'
 import {
-  assertLength, assertRoot, assertStateful
-  , render, attachElementsToCollection, collectArgs
+  assertLength, assertRoot, assertStateful,
+  render, attachElementsToCollection, collectArgs,
+  createShallowRenderer
 } from './utils';
 
 import { createNode } from 'bill/node';
@@ -91,7 +92,7 @@ Object.assign($.fn, {
     if (isDomElement)
       return $(element)
 
-    let renderer = ReactTestUtils.createRenderer()
+    let renderer = createShallowRenderer()
 
     if (defaults.context && context)
       context = { ...defaults.context, ...context }
