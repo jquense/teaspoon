@@ -1,6 +1,6 @@
 {
   "name": "teaspoon",
-  "version": "6.4.3",
+  "version": "6.5.0",
   "description": "jQuery-esque Api for React elements and instances, supports complex css selectors",
   "main": "lib/index.js",
   "scripts": {
