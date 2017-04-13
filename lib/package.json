@@ -1,6 +1,6 @@
 {
   "name": "teaspoon",
-  "version": "6.4.3",
+  "version": "6.5.0",
   "description": "jQuery-esque Api for React elements and instances, supports complex css selectors",
   "main": "index.js",
   "repository": {
@@ -18,9 +18,13 @@
     "url": "https://github.com/jquense/teaspoon/issues"
   },
   "homepage": "https://github.com/jquense/teaspoon",
+  "jest": {
+    "setupTestFrameworkScriptFile": "./test-setup.js",
+    "testRegex": "tests\\/.+\\.js$"
+  },
   "peerDependencies": {
-    "react": "^0.14.0-rc1 || ^15.0.0",
-    "react-dom": "^0.14.0-rc1 || ^15.0.0"
+    "react": "^15.5.0",
+    "react-dom": "^15.5.0"
   },
   "dependencies": {
     "bill": "^3.2.6",
@@ -28,7 +32,7 @@
     "invariant": "^2.2.0",
     "lodash": "^3.10.1",
     "promise": "^7.1.1",
-    "react-addons-test-utils": "^0.14.0-rc1 || ^15.0",
+    "react-test-renderer": "^15.5.4",
     "warning": "^2.1.0"
   }
 }
