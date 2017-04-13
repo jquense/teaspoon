@@ -6,14 +6,14 @@ describe('shallow rendering specific', ()=> {
 
   beforeEach(() => {
     updateSpy = sinon.spy();
-    StatefulExample = React.createClass({
-      componentDidUpdate: updateSpy,
-      componentWillMount(){ counterRef = this },
-      getInitialState(){ return { count: 0} },
-      increment() {
+    StatefulExample = class extends React.Component {
+      state = { count: 0}
+      componentDidUpdate = updateSpy
+      componentWillMount(){ counterRef = this }
+      increment = () => {
         let { count = 0 } = this.state
         this.setState({ count: count + 1 })
-      },
+      }
       render() {
         return (
           <div>
@@ -24,7 +24,7 @@ describe('shallow rendering specific', ()=> {
           </div>
         )
       }
-    })
+    }
   })
 
 

@@ -48,11 +48,11 @@ describe('DOM rendering specific', ()=> {
     expect($inst._mountPoint).to.equal(mount)
 
     /* this works in react@15 but not 14 */
-    // let span = findDOMNode(instance).children[0];
-    // $inst = $(span);
-    //
-    // expect($inst[0]).to.equal(span);
-    // expect($inst._mountPoint).to.equal(mount)
+    let span = findDOMNode(instance).children[0];
+    $inst = $(span);
+
+    expect($inst[0]).to.equal(span);
+    expect($inst._mountPoint).to.equal(mount)
   })
 
   it('should unmount', ()=> {
@@ -75,12 +75,12 @@ describe('DOM rendering specific', ()=> {
   it('should return DOM node from Component', ()=> {
     let instance = $(<div className='test'/>).render()
 
-    instance.dom().should.be.an.instanceof(HTMLElement)
+    expect(instance.dom()).to.be.an.instanceof(HTMLElement)
   })
 
   it('should return DOM node from HTMLElement', ()=> {
     let div = document.createElement('div')
-    $.dom(div).should.equal(div)
+    expect($.dom(div)).to.equal(div)
   })
 
   it('should throw when retrieving state from a stateless node', ()=> {
