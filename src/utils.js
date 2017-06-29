@@ -8,12 +8,6 @@ import { createNode, NODE_TYPES } from 'bill/node';
 
 let ReactTestUtils = require('react-dom/test-utils');
 let ReactShallowRenderer = require('react-test-renderer/shallow');
-let ReactMount = require('react-dom/lib/ReactMount')
-
-
-let {
-    getID, getNode, findReactContainerForID
-  , getReactRootID, _instancesByReactRootID } = ReactMount;
 
 export const Simulate = ReactTestUtils.Simulate;
 
@@ -190,23 +184,14 @@ export let getMountPoint = ifDef({
     let info = privInst._nativeContainerInfo || privInst._hostContainerInfo;
     let container = createNode(info._topLevelWrapper)
     return findDOMNode(container.instance).parentNode
-  },
-  '*': function getMountPoint(instance) {
-    var id = getID(findDOMNode(instance));
-    return findReactContainerForID(id);
   }
 })
-
-export function getRootInstance(mountPoint){
-  return _instancesByReactRootID[getReactRootID(mountPoint)];
-}
 
 export function findDOMNode(component){
   return component instanceof window.HTMLElement
     ? component
-    : component && component._rootID
-        ? getNode(component._rootID)
-        : component ? ReactDOM.findDOMNode(component) : null
+    : component
+      ? ReactDOM.findDOMNode(component) : null
 }
 
 let buildSelector = sel => typeof sel === 'function' ? bill.selector`${sel}` : sel
