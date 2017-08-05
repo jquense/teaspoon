@@ -550,8 +550,8 @@ reactive nature of data flow in react trees (or on any element of a tree that is
 
 - `.props()`: retrieve all props
 - `.props(propName)`: retrieve a single prop
-- `.props(propName, propValue, [callback])`: update a single prop value
-- `.props(newProps, [callback])`: merge `newProps` into the current set of props.
+- `.props(propName, propValue)`: update a single prop value
+- `.props(newProps)`: merge `newProps` into the current set of props.
 
 ##### `$.fn.state`
 
