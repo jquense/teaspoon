@@ -2,6 +2,10 @@
 teaspoon
 ========
 
+[![build status](https://img.shields.io/travis/jquense/teaspoon/master.svg?style=flat-square)](https://travis-ci.org/jquense/teaspoon)
+[![npm version](https://img.shields.io/npm/v/teaspoon.svg?style=flat-square)](https://www.npmjs.com/package/teaspoon)
+[![npm downloads](https://img.shields.io/npm/dm/teaspoon.svg?style=flat-square)](https://www.npmjs.com/package/teaspoon)
+
 Just the right amount of abstraction for writing clear, and concise React component tests.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
