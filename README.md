@@ -1,6 +1,10 @@
-
 teaspoon
 ========
+
+# Project deprecated!!
+
+teaspoon will not be updated to support React v16+. As of the recent release of [enzyme](http://airbnb.io/enzyme/) v3, the differences between it and teaspoon have shrunk to almost complete API parity (baring a few things), Given that enzyme is more widely used and maintained it makes sense to switch to that going forward rather than continute to maintain teaspoon and it's underlying pieces. Thanks for using teaspoon ya'll!
+
 
 Just the right amount of abstraction for writing clear, and concise React component tests.
 
